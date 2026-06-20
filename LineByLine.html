@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Line by Line — English Learning</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f4ff;
+  --card-bg: #ffffff;
+  --accent: #4a7cfe;
+  --accent-light: #eef2ff;
+  --text: #1a1d2e;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --success: #22c55e;
+  --hidden-bg: #dbeafe;
+  --shadow: 0 4px 24px rgba(74,124,254,0.10);
+  --radius: 16px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+
+.logo {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent);
+  padding: 18px 0;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.logo span { color: #1a1d2e; }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.tab-btn.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.tab-btn:hover:not(.active) { background: #f3f4f6; }
+
+/* ── Layout ── */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.hidden { display: none !important; }
+
+/* ── Stage Bar ── */
+.stage-bar {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stage-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.stage-dots {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.stage-dot {
+  height: 7px;
+  border-radius: 4px;
+  flex: 1;
+  background: var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stage-dot.active { background: var(--accent); }
+.stage-dot.done   { background: var(--success); }
+
+.stage-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ── Vocab Card ── */
+.vocab-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 44px 40px 36px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vocab-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4a7cfe, #a78bfa);
+}
+
+.word-display {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  font-family: 'Georgia', serif;
+  word-break: break-word;
+}
+
+.phonetic {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.pos-badge {
+  display: inline-block;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 22px;
+}
+
+.definition {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.65;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+.example-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.example-text {
+  font-size: 0.98rem;
+  line-height: 1.75;
+  color: #374151;
+  font-style: italic;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 14px 20px;
+  min-height: 52px;
+  border: 1.5px solid var(--border);
+}
+
+/* Hidden chars */
+.ch-hidden {
+  display: inline-block;
+  background: var(--hidden-bg);
+  color: transparent;
+  border-radius: 3px;
+  min-width: 0.55em;
+  height: 1em;
+  vertical-align: text-bottom;
+  margin: 0 0.5px;
+  user-select: none;
+}
+
+/* Type check */
+.type-row {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.type-row input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'Georgia', serif;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  background: #fafafa;
+}
+
+.type-row input:focus  { border-color: var(--accent); background: white; }
+.type-row input.ok     { border-color: var(--success); background: #f0fdf4; color: #166534; }
+.type-row input.wrong  { border-color: #f87171; background: #fff1f2; }
+
+.type-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 6px;
+  text-align: left;
+}
+
+/* ── Nav Row ── */
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary   { background: var(--accent); color: white; }
+.btn-primary:hover  { background: #3a6cf0; }
+.btn-secondary { background: var(--border); color: var(--text); }
+.btn-secondary:hover { background: #d1d5db; }
+.btn-ghost     { background: none; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn-ghost:hover { background: var(--accent-light); }
+.btn-sm { padding: 7px 14px; font-size: 0.8rem; border-radius: 8px; }
+
+.spacer { flex: 1; }
+
+.card-counter {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Add Word Form ── */
+.add-form {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.add-form h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--text);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-grid.single { grid-template-columns: 1fr; }
+
+.field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+}
+
+.field input, .field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: #fafafa;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.field input:focus, .field textarea:focus {
+  border-color: var(--accent);
+  background: white;
+}
+
+.field textarea { resize: vertical; min-height: 64px; }
+
+/* ── Passage Tab ── */
+.passage-input-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  margin-bottom: 16px;
+}
+
+.passage-input-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+.passage-input-card p  { font-size: 0.84rem; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+
+.passage-ta {
+  width: 100%;
+  min-height: 130px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.94rem;
+  line-height: 1.65;
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  background: #fafafa;
+  transition: border-color 0.15s;
+  margin-bottom: 14px;
+}
+
+.passage-ta:focus { border-color: var(--accent); background: white; }
+
+.ctrl-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* Global controls */
+.global-ctrl {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  padding: 14px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.global-ctrl-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 4px;
+}
+
+/* Progress */
+.progress-wrap {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* Line cards */
+.lines-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+.line-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1.5px solid transparent;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.line-card.practiced { border-color: rgba(74,124,254,0.25); }
+.line-card.mastered  { border-color: rgba(34,197,94,0.35); }
+
+.line-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 22px;
+  text-align: center;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 3px 0;
+}
+
+.line-text {
+  flex: 1;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.line-stage-bar {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.lsb {
+  width: 7px;
+  height: 22px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  background: var(--border);
+  transition: all 0.15s;
+}
+
+.lsb.active { background: var(--accent); }
+.lsb.done   { background: var(--success); }
+
+/* Keyboard hint */
+.kb-hint {
+  text-align: center;
+  font-size: 0.76rem;
+  color: #9ca3af;
+  margin-top: 12px;
+}
+
+.kb-hint kbd {
+  background: #f3f4f6;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.74rem;
+  font-family: monospace;
+}
+
+@media (max-width: 500px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .vocab-card { padding: 32px 20px 28px; }
+  .word-display { font-size: 2rem; }
+  header { padding: 0 16px; gap: 12px; }
+  main { padding: 20px 14px 60px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Line <span>by</span> Line</div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('vocab')">📚 Vocabulary</button>
+    <button class="tab-btn" onclick="switchTab('passage')">📖 Passages</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══════════ VOCABULARY TAB ══════════ -->
+  <div id="vocab-tab">
+
+    <!-- Stage indicator -->
+    <div class="stage-bar">
+      <span class="stage-label">Reveal</span>
+      <div class="stage-dots" id="v-stage-dots"></div>
+      <span class="stage-name" id="v-stage-name">Full text</span>
+    </div>
+
+    <!-- Card -->
+    <div class="vocab-card">
+      <div class="word-display" id="v-word"></div>
+      <div class="phonetic" id="v-phonetic"></div>
+      <div><span class="pos-badge" id="v-pos"></span></div>
+      <p class="definition" id="v-def"></p>
+      <div class="example-label">Example sentence</div>
+      <div class="example-text" id="v-example"></div>
+
+      <div id="v-type-row" class="type-row hidden">
+        <input type="text" id="v-type-input" placeholder="Type the word from memory…" oninput="checkVocabTyping()" autocomplete="off" spellcheck="false">
+        <button class="btn btn-secondary btn-sm" onclick="revealWord()">Show</button>
+      </div>
+      <div id="v-type-hint" class="type-hint hidden">Type the word above — spaces and punctuation are ignored</div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="prevCard()">← Prev</button>
+      <span class="card-counter" id="v-counter"></span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="advanceStage()" id="v-advance-btn">Next stage →</button>
+      <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+    </div>
+
+    <div class="kb-hint">
+      <kbd>Space</kbd> advance stage &nbsp;·&nbsp; <kbd>→</kbd> next card &nbsp;·&nbsp; <kbd>←</kbd> prev card
+    </div>
+
+    <!-- Add Word -->
+    <div class="add-form" style="margin-top:28px">
+      <h3>➕ Add Your Own Word</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>Word *</label>
+          <input type="text" id="nw-word" placeholder="e.g. Eloquent">
+        </div>
+        <div class="field">
+          <label>Phonetic</label>
+          <input type="text" id="nw-phonetic" placeholder="e.g. /ˈɛləkwənt/">
+        </div>
+        <div class="field">
+          <label>Part of Speech</label>
+          <input type="text" id="nw-pos" placeholder="e.g. adjective">
+        </div>
+        <div class="field">
+          <label>Definition *</label>
+          <input type="text" id="nw-def" placeholder="Meaning of the word">
+        </div>
+      </div>
+      <div class="form-grid single" style="margin-bottom:14px">
+        <div class="field">
+          <label>Example Sentence *</label>
+          <textarea id="nw-example" placeholder="Use the word in a natural sentence…"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="addWord()">Add Word</button>
+    </div>
+
+  </div>
+
+  <!-- ══════════ PASSAGE TAB ══════════ -->
+  <div id="passage-tab" class="hidden">
+
+    <div class="passage-input-card">
+      <h3>Paste a Passage</h3>
+      <p>Each line becomes a separate practice unit. Start with the full text, then gradually hide letters until you can recall from memory.</p>
+      <textarea class="passage-ta" id="p-input" placeholder="Paste any text here — a story excerpt, dialogue, speech, famous quote, or your own writing…"></textarea>
+      <div class="ctrl-row">
+        <button class="btn btn-primary" onclick="loadPassage()">Start Practice</button>
+        <button class="btn btn-secondary" onclick="loadExample()">Try an Example</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetPassage()" id="p-reset-btn" style="margin-left:auto">Reset</button>
+      </div>
+    </div>
+
+    <div id="p-practice" class="hidden">
+      <div class="progress-wrap">
+        <div class="progress-fill" id="p-progress" style="width:0%"></div>
+      </div>
+
+      <div class="global-ctrl">
+        <span class="global-ctrl-label">All lines:</span>
+        <button class="btn btn-secondary btn-sm" onclick="setAllStages(0)">Full</button>
+        <button class="btn btn-secondary btn-sm" onclick="setAllStages(1)">25%</button>
+        <button class="btn btn-secondary btn-sm" onclick="setAllStages(2)">50%</button>
+        <button class="btn btn-secondary btn-sm" onclick="setAllStages(3)">75%</button>
+        <button class="btn btn-secondary btn-sm" onclick="setAllStages(4)">Blank</button>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="advanceAllByOne()">Advance all ↓</button>
+      </div>
+
+      <div class="lines-wrap" id="p-lines"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+// ──────────────────────────────────────
+//  VOCABULARY DATA
+// ──────────────────────────────────────
+const vocab = [
+  {
+    word: "Ambiguous",
+    phonetic: "/æmˈbɪɡjuəs/",
+    pos: "adjective",
+    definition: "Open to more than one interpretation; not having one obvious meaning.",
+    example: "The politician gave an ambiguous answer that satisfied no one in the room."
+  },
+  {
+    word: "Eloquent",
+    phonetic: "/ˈɛləkwənt/",
+    pos: "adjective",
+    definition: "Fluent, persuasive, and well-expressed in speech or writing.",
+    example: "She delivered an eloquent speech that moved the entire audience to tears."
+  },
+  {
+    word: "Meticulous",
+    phonetic: "/məˈtɪkjʊləs/",
+    pos: "adjective",
+    definition: "Showing great attention to detail; very careful and precise.",
+    example: "The scientist kept meticulous records of every single experiment."
+  },
+  {
+    word: "Persevere",
+    phonetic: "/ˌpɜːrsɪˈvɪər/",
+    pos: "verb",
+    definition: "To continue doing something despite difficulty or repeated failure.",
+    example: "Despite many setbacks, she continued to persevere until she finally succeeded."
+  },
+  {
+    word: "Concise",
+    phonetic: "/kənˈsaɪs/",
+    pos: "adjective",
+    definition: "Giving a lot of information clearly in a few words; brief but complete.",
+    example: "A good email should always be concise and easy for the reader to understand."
+  },
+  {
+    word: "Inevitable",
+    phonetic: "/ɪnˈɛvɪtəbl/",
+    pos: "adjective",
+    definition: "Certain to happen; impossible to avoid or prevent.",
+    example: "Change is inevitable in life; the key is how well you adapt to it."
+  },
+  {
+    word: "Comprehend",
+    phonetic: "/ˌkɒmprɪˈhɛnd/",
+    pos: "verb",
+    definition: "To understand something fully; to grasp the meaning of.",
+    example: "It took him a moment to fully comprehend what had just happened to him."
+  },
+  {
+    word: "Substantial",
+    phonetic: "/səbˈstænʃl/",
+    pos: "adjective",
+    definition: "Of considerable importance, size, or worth.",
+    example: "She made a substantial improvement in her English skills over three months."
+  },
+  {
+    word: "Nuance",
+    phonetic: "/ˈnjuːɑːns/",
+    pos: "noun",
+    definition: "A subtle difference in meaning, expression, or sound.",
+    example: "Understanding the nuances of a language takes many years of practice."
+  },
+  {
+    word: "Diligent",
+    phonetic: "/ˈdɪlɪdʒənt/",
+    pos: "adjective",
+    definition: "Having or showing care and consistent effort in your work.",
+    example: "A diligent student reviews their notes every single day without fail."
+  },
+  {
+    word: "Articulate",
+    phonetic: "/ɑːrˈtɪkjʊlɪt/",
+    pos: "adjective",
+    definition: "Having or showing the ability to speak fluently and coherently.",
+    example: "The articulate young lawyer impressed the judge with her clear reasoning."
+  },
+  {
+    word: "Emphasize",
+    phonetic: "/ˈɛmfəsaɪz/",
+    pos: "verb",
+    definition: "To give special importance or attention to something.",
+    example: "The teacher always emphasizes the importance of reading every single day."
+  }
+];
+
+// ──────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────
+let cardIdx   = 0;
+let cardStage = 0; // 0=full … 4=type
+
+const STAGE_NAMES = ["Full text", "25% hidden", "50% hidden", "75% hidden", "Type it out"];
+
+// ──────────────────────────────────────
+//  PROGRESSIVE REVEAL CORE
+// ──────────────────────────────────────
+// Deterministically assigns each letter a "hide level" 1–4
+// based on its position, so the masking is consistent on re-render.
+function charHideLevel(idx) {
+  return ((idx * 13 + 7) % 4) + 1; // 1, 2, 3, or 4
+}
+
+function renderMasked(text, stage, el) {
+  if (stage === 0) {
+    el.textContent = text;
+    return;
+  }
+
+  let letterIdx = 0;
+  const parts = text.split('').map(ch => {
+    const isLetter = /[a-zA-Z']/.test(ch);
+    if (!isLetter) return `<span>${ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch}</span>`;
+    const hide = (stage === 4) || charHideLevel(letterIdx) <= stage;
+    letterIdx++;
+    if (hide) return `<span class="ch-hidden">_</span>`;
+    return `<span>${ch}</span>`;
+  });
+
+  el.innerHTML = parts.join('');
+}
+
+// ──────────────────────────────────────
+//  VOCABULARY RENDERING
+// ──────────────────────────────────────
+function renderCard() {
+  const c = vocab[cardIdx];
+
+  // Word
+  const wordEl = document.getElementById('v-word');
+  renderMasked(c.word, cardStage, wordEl);
+
+  // Static fields
+  document.getElementById('v-phonetic').textContent = c.phonetic || '';
+  document.getElementById('v-pos').textContent      = c.pos || 'word';
+  document.getElementById('v-def').textContent      = c.definition;
+
+  // Example
+  renderMasked(c.example, cardStage, document.getElementById('v-example'));
+
+  // Type row (stage 4 only)
+  const typeRow  = document.getElementById('v-type-row');
+  const typeHint = document.getElementById('v-type-hint');
+  const typeInp  = document.getElementById('v-type-input');
+  if (cardStage === 4) {
+    typeRow.classList.remove('hidden');
+    typeHint.classList.remove('hidden');
+    typeInp.value = '';
+    typeInp.className = '';
+    typeInp.placeholder = `Type "${c.word}" from memory…`;
+  } else {
+    typeRow.classList.add('hidden');
+    typeHint.classList.add('hidden');
+  }
+
+  // Stage dots
+  const dotsEl = document.getElementById('v-stage-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'stage-dot' +
+      (i === cardStage ? ' active' : '') +
+      (i < cardStage  ? ' done'   : '');
+    d.title   = STAGE_NAMES[i];
+    d.onclick = () => { cardStage = i; renderCard(); };
+    dotsEl.appendChild(d);
+  }
+
+  document.getElementById('v-stage-name').textContent = STAGE_NAMES[cardStage];
+  document.getElementById('v-counter').textContent    = `${cardIdx + 1} / ${vocab.length}`;
+  document.getElementById('v-advance-btn').textContent =
+    cardStage < 4 ? 'Next stage →' : 'Restart card';
+}
+
+function checkVocabTyping() {
+  const inp  = document.getElementById('v-type-input');
+  const word = vocab[cardIdx].word.toLowerCase().replace(/[^a-z]/g, '');
+  const val  = inp.value.toLowerCase().replace(/[^a-z]/g, '');
+  if (!val) { inp.className = ''; return; }
+  if (val === word)           { inp.classList.add('ok');    inp.classList.remove('wrong'); }
+  else if (word.startsWith(val)) { inp.className = ''; }
+  else                        { inp.classList.add('wrong'); inp.classList.remove('ok'); }
+}
+
+function revealWord() {
+  const inp = document.getElementById('v-type-input');
+  inp.value = vocab[cardIdx].word;
+  inp.className = 'ok';
+}
+
+function advanceStage() {
+  if (cardStage < 4) cardStage++;
+  else { cardStage = 0; }
+  renderCard();
+}
+
+function nextCard() {
+  cardIdx   = (cardIdx + 1) % vocab.length;
+  cardStage = 0;
+  renderCard();
+}
+
+function prevCard() {
+  cardIdx   = (cardIdx - 1 + vocab.length) % vocab.length;
+  cardStage = 0;
+  renderCard();
+}
+
+// Keyboard shortcuts (vocab tab only)
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('vocab-tab').classList.contains('hidden')) return;
+  // vocab tab is active when it does NOT have .hidden
+  // (above condition is wrong — let me flip it)
+});
+
+document.addEventListener('keydown', e => {
+  const vocabActive = !document.getElementById('vocab-tab').classList.contains('hidden');
+  if (!vocabActive) return;
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+
+  if (e.key === ' ' || e.key === 'ArrowDown') {
+    e.preventDefault(); advanceStage();
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault(); nextCard();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault(); prevCard();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (cardStage > 0) { cardStage--; renderCard(); }
+  }
+});
+
+function addWord() {
+  const word    = document.getElementById('nw-word').value.trim();
+  const def     = document.getElementById('nw-def').value.trim();
+  const example = document.getElementById('nw-example').value.trim();
+  if (!word || !def || !example) {
+    alert('Please fill in Word, Definition, and Example (required fields).');
+    return;
+  }
+  vocab.push({
+    word,
+    phonetic: document.getElementById('nw-phonetic').value.trim(),
+    pos:      document.getElementById('nw-pos').value.trim() || 'word',
+    definition: def,
+    example
+  });
+  cardIdx   = vocab.length - 1;
+  cardStage = 0;
+  renderCard();
+  ['nw-word','nw-phonetic','nw-pos','nw-def','nw-example'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+// ──────────────────────────────────────
+//  PASSAGE
+// ──────────────────────────────────────
+let pLines  = [];
+let pStages = [];
+
+const EXAMPLE_PASSAGE =
+`Every expert was once a beginner who simply refused to give up.
+The secret of success is to do the common things uncommonly well.
+Do not wait for the perfect moment; take the moment and make it perfect.
+A journey of a thousand miles begins with a single step forward.
+You do not rise to the level of your goals; you fall to the level of your systems.
+Small daily improvements over time lead to stunning results.`;
+
+function loadExample() {
+  document.getElementById('p-input').value = EXAMPLE_PASSAGE;
+  loadPassage();
+}
+
+function loadPassage() {
+  const raw = document.getElementById('p-input').value.trim();
+  if (!raw) { alert('Please paste some text first.'); return; }
+
+  pLines  = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  pStages = pLines.map(() => 0);
+
+  document.getElementById('p-practice').classList.remove('hidden');
+  renderPassage();
+}
+
+function resetPassage() {
+  pStages = pLines.map(() => 0);
+  renderPassage();
+}
+
+function renderPassage() {
+  const container = document.getElementById('p-lines');
+  container.innerHTML = '';
+
+  const total = pStages.reduce((a, s) => a + s, 0);
+  const max   = pLines.length * 4;
+  document.getElementById('p-progress').style.width = `${max ? (total / max) * 100 : 0}%`;
+
+  pLines.forEach((line, idx) => {
+    const stage = pStages[idx];
+
+    const card = document.createElement('div');
+    card.className = 'line-card' +
+      (stage > 0 && stage < 4 ? ' practiced' : '') +
+      (stage === 4             ? ' mastered'  : '');
+
+    const num = document.createElement('div');
+    num.className   = 'line-num';
+    num.textContent = idx + 1;
+
+    const textEl = document.createElement('div');
+    textEl.className = 'line-text';
+    renderMasked(line, stage, textEl);
+
+    const stageBtns = document.createElement('div');
+    stageBtns.className = 'line-stage-bar';
+    for (let s = 0; s < 5; s++) {
+      const btn = document.createElement('button');
+      btn.className = 'lsb' +
+        (s === stage ? ' active' : '') +
+        (s < stage   ? ' done'   : '');
+      btn.title   = STAGE_NAMES[s];
+      btn.onclick = () => { pStages[idx] = s; renderPassage(); };
+      stageBtns.appendChild(btn);
+    }
+
+    card.appendChild(num);
+    card.appendChild(textEl);
+    card.appendChild(stageBtns);
+    container.appendChild(card);
+  });
+}
+
+function setAllStages(s) {
+  pStages = pStages.map(() => s);
+  renderPassage();
+}
+
+function advanceAllByOne() {
+  pStages = pStages.map(s => Math.min(s + 1, 4));
+  renderPassage();
+}
+
+// ──────────────────────────────────────
+//  TAB SWITCHING
+// ──────────────────────────────────────
+function switchTab(tab) {
+  const isVocab = tab === 'vocab';
+  document.getElementById('vocab-tab').classList.toggle('hidden', !isVocab);
+  document.getElementById('passage-tab').classList.toggle('hidden', isVocab);
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (isVocab && i === 0) || (!isVocab && i === 1));
+  });
+}
+
+// ──────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────
+renderCard();
+</script>
+</body>
+</html>
