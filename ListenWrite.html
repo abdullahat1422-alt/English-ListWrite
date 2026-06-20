@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListenWrite — اكتب ما تسمع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design Tokens ── */
+:root {
+  --bg:           #faf8f5;
+  --bg-2:         #f2ede5;
+  --surface:      #ffffff;
+  --accent:       #5b8c74;
+  --accent-tint:  #e6f0eb;
+  --accent-deep:  #3a6652;
+  --text:         #26211b;
+  --text-2:       #6a5c52;
+  --text-3:       #a89585;
+  --border:       #e6ddd3;
+  --border-2:     #d0c5b8;
+  --success:      #3d8f68;
+  --success-tint: #e6f5ee;
+  --error:        #c04848;
+  --error-tint:   #fdeaea;
+
+  --font-arabic:  'Amiri', 'Traditional Arabic', serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', -apple-system, sans-serif;
+
+  --ease-out:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --shadow-md: 0 8px 32px rgba(38, 33, 27, 0.09), 0 2px 8px rgba(38, 33, 27, 0.05);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.hidden { display: none !important; }
+
+/* ── Progress bar ── */
+.progress-track {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border);
+  z-index: 10;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #82b89e);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.55s var(--ease-out);
+  width: 0%;
+}
+
+/* ── Counter ── */
+.counter {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  z-index: 10;
+}
+
+/* ── Scene & Card ── */
+.scene {
+  width: 100%;
+  max-width: 580px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 52px 52px 44px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* top accent stripe */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-tint), var(--accent), var(--accent-tint));
+}
+
+/* ── Speaker button ── */
+.speaker-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  transition: all 0.18s var(--ease-out);
+}
+.speaker-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+  transform: scale(1.07);
+}
+.speaker-btn.playing {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+  animation: pulse-ring 1.1s ease infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0px rgba(91,140,116,0.35); }
+  70%  { box-shadow: 0 0 0 9px rgba(91,140,116,0); }
+  100% { box-shadow: 0 0 0 0px rgba(91,140,116,0); }
+}
+
+/* ── Arabic section ── */
+.arabic-section {
+  direction: rtl;
+  margin-bottom: 36px;
+  animation: fadeUp 0.45s var(--ease-out) both;
+}
+.arabic-word {
+  font-family: var(--font-arabic);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 14px;
+}
+.arabic-def {
+  font-family: var(--font-arabic);
+  font-size: 1.08rem;
+  color: var(--text-2);
+  line-height: 1.8;
+  font-weight: 400;
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto 36px;
+}
+.divider-line-top {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, var(--border-2));
+}
+.divider-line-bottom {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, var(--border-2), transparent);
+}
+.divider-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-2);
+}
+
+/* ── English sentence ── */
+.english-section {
+  animation: fadeUp 0.45s 0.1s var(--ease-out) both;
+}
+
+.sentence-wrap {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.5vw, 1.18rem);
+  font-style: italic;
+  color: var(--text-2);
+  line-height: 2.1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+}
+
+/* Inline input — the star of the show */
+.word-input {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid var(--border-2);
+  outline: none;
+  text-align: center;
+  padding: 2px 6px 3px;
+  min-width: 60px;
+  border-radius: 0;
+  transition: border-color 0.2s ease, color 0.2s ease,
+              background 0.2s ease, border-radius 0.2s ease;
+  caret-color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.word-input::placeholder { color: var(--border-2); }
+.word-input:focus         { border-bottom-color: var(--accent); }
+
+.word-input.correct {
+  color: var(--success);
+  border-bottom-color: var(--success);
+  background: var(--success-tint);
+  border-radius: 6px;
+  padding: 2px 10px 3px;
+}
+.word-input.wrong {
+  color: var(--error);
+  border-bottom-color: var(--error);
+  animation: shake 0.4s var(--ease-out) both;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-7px); }
+  35%     { transform: translateX(7px); }
+  55%     { transform: translateX(-5px); }
+  75%     { transform: translateX(4px); }
+}
+
+/* ── Hint: correct word ── */
+.correct-word-hint {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  color: var(--text-3);
+  animation: fadeIn 0.3s ease;
+  line-height: 1.5;
+}
+.correct-word-hint strong {
+  color: var(--text);
+  font-weight: 600;
+  font-family: var(--font-body);
+  background: var(--bg-2);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
+/* ── Status line ── */
+.status {
+  margin-top: 18px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+}
+.status.hint-msg    { color: var(--text-3); font-weight: 400; }
+.status.success-msg { color: var(--success); }
+.status.error-msg   { color: var(--error); }
+
+/* ── Card transitions ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideOutLeft {
+  to { opacity: 0; transform: translateX(-36px) scale(0.97); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.card.exit  { animation: slideOutLeft 0.28s var(--ease-out) forwards; }
+.card.enter { animation: slideInRight 0.38s var(--ease-out) both; }
+
+/* ── Completion screen ── */
+.done-card {
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 60px 48px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  text-align: center;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+.done-icon {
+  width: 76px;
+  height: 76px;
+  background: var(--accent-tint);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28px;
+  font-size: 2.2rem;
+}
+.done-title {
+  font-family: var(--font-arabic);
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.done-sub-en {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+.done-sub {
+  font-size: 0.88rem;
+  color: var(--text-3);
+  margin-bottom: 36px;
+}
+.btn-restart {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 32px;
+  border-radius: 9999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(91,140,116,0.30);
+  transition: all 0.18s var(--ease-out);
+  letter-spacing: 0.02em;
+}
+.btn-restart:hover  { opacity: 0.88; transform: translateY(-2px); }
+.btn-restart:active { transform: scale(0.97); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .card { padding: 40px 24px 36px; border-radius: 20px; }
+  .sentence-wrap { font-size: 0.96rem; gap: 2px; }
+  .arabic-def { font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-track">
+  <div class="progress-fill" id="progress-fill"></div>
+</div>
+<div class="counter" id="counter"></div>
+
+<div class="scene" id="scene">
+  <div class="card" id="card">
+
+    <button class="speaker-btn" id="speaker-btn" onclick="playWord()" title="استمع مرة أخرى">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </button>
+
+    <div class="arabic-section">
+      <div class="arabic-word" id="arabic-word"></div>
+      <div class="arabic-def"  id="arabic-def"></div>
+    </div>
+
+    <div class="divider">
+      <div class="divider-line-top"></div>
+      <div class="divider-dot"></div>
+      <div class="divider-line-bottom"></div>
+    </div>
+
+    <div class="english-section">
+      <div class="sentence-wrap" id="sentence-wrap"></div>
+      <div class="correct-word-hint hidden" id="correct-word-hint"></div>
+      <div class="status hint-msg" id="status">اضغط Enter للتحقق</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  VOCABULARY
+// ══════════════════════════════════════
+const words = [
+  {
+    arabic: "نَميمة",
+    arabicDef: "تبادل الأحاديث حول حياة الآخرين، وغالباً ما تتضمن معلومات غير مؤكدة أو شائعات.",
+    english: "gossip",
+    sentence: "We should avoid {w} about our friends and focus on supporting each other instead."
+  },
+  {
+    arabic: "صَبر",
+    arabicDef: "القدرة على الانتظار والتحمل دون ضيق أو توتر.",
+    english: "patience",
+    sentence: "Learning a new language requires {w} and consistent daily practice."
+  },
+  {
+    arabic: "شَجاعة",
+    arabicDef: "القدرة على مواجهة الخوف والصعوبات بثبات وقوة.",
+    english: "courage",
+    sentence: "It takes real {w} to speak your mind in front of a large audience."
+  },
+  {
+    arabic: "تَواضع",
+    arabicDef: "إدراك حدود النفس وعدم التكبر على الآخرين.",
+    english: "humility",
+    sentence: "True leaders show {w} even during their greatest achievements."
+  },
+  {
+    arabic: "كَرَم",
+    arabicDef: "العطاء بسخاء دون توقع المقابل.",
+    english: "generosity",
+    sentence: "Her {w} toward strangers showed the true depth of her character."
+  },
+  {
+    arabic: "مُثابرة",
+    arabicDef: "الاستمرار في المحاولة رغم الصعوبات والإخفاقات.",
+    english: "perseverance",
+    sentence: "With {w}, you can overcome any obstacle you face in life."
+  },
+  {
+    arabic: "إخلاص",
+    arabicDef: "الوفاء والتمسك بالعهود مع الأصدقاء والأحبة.",
+    english: "loyalty",
+    sentence: "Friendship is built on trust and {w} to one another through all seasons."
+  },
+  {
+    arabic: "رَحمة",
+    arabicDef: "الشعور بألم الآخرين والرغبة الصادقة في مساعدتهم.",
+    english: "compassion",
+    sentence: "She showed deep {w} to everyone who was suffering around her."
+  },
+  {
+    arabic: "حِكمة",
+    arabicDef: "القدرة على اتخاذ القرارات الصائبة المبنية على التجربة والمعرفة.",
+    english: "wisdom",
+    sentence: "With age comes {w} and a much deeper understanding of the world."
+  },
+  {
+    arabic: "أَمانة",
+    arabicDef: "قول الحقيقة والتصرف بصدق في جميع الأحوال.",
+    english: "honesty",
+    sentence: "In every relationship, {w} is the foundation of genuine connection."
+  },
+  {
+    arabic: "طَموح",
+    arabicDef: "الرغبة القوية في تحقيق الأهداف والنجاح في الحياة.",
+    english: "ambition",
+    sentence: "His {w} drove him to achieve things that others said were impossible."
+  },
+  {
+    arabic: "امتنان",
+    arabicDef: "الشعور بالشكر والتقدير تجاه ما تملكه أو ما يقدمه لك الآخرون.",
+    english: "gratitude",
+    sentence: "Expressing {w} every day can significantly improve your overall well-being."
+  }
+];
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let idx     = 0;
+let inputEl = null;
+let locked  = false; // prevent double-check while animating
+
+// ══════════════════════════════════════
+//  SPEECH
+// ══════════════════════════════════════
+function playWord() {
+  const word = words[idx].english;
+  window.speechSynthesis.cancel();
+
+  const u  = new SpeechSynthesisUtterance(word);
+  u.lang   = 'en-US';
+  u.rate   = 0.82;
+  u.pitch  = 1;
+
+  const btn = document.getElementById('speaker-btn');
+  if (btn) {
+    btn.classList.add('playing');
+    u.onend  = () => btn.classList.remove('playing');
+    u.onerror = () => btn.classList.remove('playing');
+  }
+
+  window.speechSynthesis.speak(u);
+}
+
+// ══════════════════════════════════════
+//  RENDER CARD
+// ══════════════════════════════════════
+function renderCard(animate) {
+  const w = words[idx];
+  locked = false;
+
+  document.getElementById('arabic-word').textContent = w.arabic;
+  document.getElementById('arabic-def').textContent  = w.arabicDef;
+
+  // Build inline sentence
+  const wrap  = document.getElementById('sentence-wrap');
+  const parts = w.sentence.split('{w}');
+  wrap.innerHTML = '';
+
+  if (parts[0]) {
+    const s = document.createElement('span');
+    s.textContent = parts[0];
+    wrap.appendChild(s);
+  }
+
+  inputEl = document.createElement('input');
+  inputEl.type        = 'text';
+  inputEl.className   = 'word-input';
+  inputEl.autocomplete = 'off';
+  inputEl.spellcheck  = false;
+  inputEl.setAttribute('autocorrect', 'off');
+  inputEl.setAttribute('autocapitalize', 'off');
+  // width proportional to word length
+  inputEl.style.width = (Math.max(w.english.length, 5) * 11 + 24) + 'px';
+  inputEl.placeholder = '_ _ _';
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+  // Re-focus immediately if input loses focus (keeps typing always ready)
+  inputEl.addEventListener('blur', () => {
+    if (!locked) setTimeout(() => inputEl && inputEl.focus(), 0);
+  });
+  wrap.appendChild(inputEl);
+
+  if (parts[1]) {
+    const s = document.createElement('span');
+    s.textContent = parts[1];
+    wrap.appendChild(s);
+  }
+
+  // Reset feedback
+  const hint = document.getElementById('correct-word-hint');
+  hint.classList.add('hidden');
+  hint.innerHTML = '';
+  setStatus('hint', 'اضغط Enter للتحقق');
+
+  // Progress
+  const pct = (idx / words.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('counter').textContent = `${idx + 1} / ${words.length}`;
+
+  if (animate) {
+    const card = document.getElementById('card');
+    card.classList.remove('exit');
+    void card.offsetWidth; // reflow
+    card.classList.add('enter');
+    setTimeout(() => card.classList.remove('enter'), 400);
+  }
+
+  // Auto-play word, then focus input
+  setTimeout(() => {
+    playWord();
+    setTimeout(() => inputEl && inputEl.focus(), 280);
+  }, 150);
+}
+
+// ══════════════════════════════════════
+//  CHECK ANSWER
+// ══════════════════════════════════════
+function checkAnswer() {
+  if (locked || !inputEl) return;
+  const typed   = inputEl.value.trim().toLowerCase();
+  const correct = words[idx].english.toLowerCase();
+  if (!typed) return;
+
+  if (typed === correct) {
+    // ✓ Correct
+    locked = true;
+    inputEl.classList.remove('wrong');
+    inputEl.classList.add('correct');
+    inputEl.disabled = true;
+    document.getElementById('correct-word-hint').classList.add('hidden');
+    setStatus('success', '✓ ممتاز!');
+
+    setTimeout(() => advance(), 950);
+
+  } else {
+    // ✗ Wrong — show correct word, let them retry
+    inputEl.classList.remove('correct');
+    inputEl.classList.add('wrong');
+
+    const hint = document.getElementById('correct-word-hint');
+    hint.innerHTML = `الكلمة الصحيحة: <strong>${words[idx].english}</strong>`;
+    hint.classList.remove('hidden');
+
+    setStatus('error', '✗ حاول مرة أخرى');
+
+    // Clear and re-focus so they can keep trying (hint stays visible)
+    setTimeout(() => {
+      if (!inputEl || locked) return;
+      inputEl.value = '';
+      inputEl.classList.remove('wrong');
+      inputEl.focus();
+      setStatus('hint', 'اكتب الكلمة الصحيحة ↑');
+    }, 1300);
+  }
+}
+
+// ══════════════════════════════════════
+//  ADVANCE TO NEXT
+// ══════════════════════════════════════
+function advance() {
+  const card = document.getElementById('card');
+
+  if (idx >= words.length - 1) {
+    card.classList.add('exit');
+    setTimeout(showDone, 300);
+    return;
+  }
+
+  card.classList.add('exit');
+  setTimeout(() => {
+    idx++;
+    card.classList.remove('exit');
+    renderCard(true);
+  }, 280);
+}
+
+// ══════════════════════════════════════
+//  STATUS
+// ══════════════════════════════════════
+function setStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = 'status ' + (
+    type === 'success' ? 'success-msg' :
+    type === 'error'   ? 'error-msg'   : 'hint-msg'
+  );
+  el.textContent = msg;
+}
+
+// ══════════════════════════════════════
+//  COMPLETION
+// ══════════════════════════════════════
+function showDone() {
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('counter').textContent = '';
+  document.getElementById('scene').innerHTML = `
+    <div class="done-card">
+      <div class="done-icon">🌿</div>
+      <div class="done-title">أحسنت!</div>
+      <div class="done-sub-en">Well done, keep it up.</div>
+      <div class="done-sub">You completed all ${words.length} words today.</div>
+      <button class="btn-restart" onclick="restartApp()">↺ &nbsp; تدرّب مرة أخرى</button>
+    </div>
+  `;
+}
+
+function restartApp() {
+  idx = 0;
+  document.getElementById('scene').innerHTML = `
+    <div class="card" id="card">
+      <button class="speaker-btn" id="speaker-btn" onclick="playWord()" title="استمع مرة أخرى">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
+      <div class="arabic-section">
+        <div class="arabic-word" id="arabic-word"></div>
+        <div class="arabic-def"  id="arabic-def"></div>
+      </div>
+      <div class="divider">
+        <div class="divider-line-top"></div>
+        <div class="divider-dot"></div>
+        <div class="divider-line-bottom"></div>
+      </div>
+      <div class="english-section">
+        <div class="sentence-wrap" id="sentence-wrap"></div>
+        <div class="correct-word-hint hidden" id="correct-word-hint"></div>
+        <div class="status hint-msg" id="status">اضغط Enter للتحقق</div>
+      </div>
+    </div>
+  `;
+  renderCard(false);
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+
+// Any keypress anywhere → redirect to input
+document.addEventListener('keydown', () => {
+  if (inputEl && !locked && document.activeElement !== inputEl) {
+    inputEl.focus();
+  }
+});
+
+renderCard(false);
+</script>
+</body>
+</html>
