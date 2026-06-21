@@ -399,38 +399,60 @@ function checkAnswer(){
     if(!inp) return;
     const val = inp.value.trim();
     if(!val){ document.getElementById('hint-text').textContent = 'Please type an answer first.'; return; }
-    // accept multiple correct answers separated by /
     const accepted = item.a.split('/').map(a=>normalize(a));
     correct = accepted.includes(normalize(val));
     inp.classList.add(correct?'correct':'wrong');
-    if(currentMode === 'fill'){
-      showFeedback(correct, item.a, val);
-    } else {
-      showFeedback(correct, item.a, val);
+    showFeedback(correct, item.a, val);
+
+    if(!correct){
+      // record first-attempt miss for dots, then allow retry
+      if(!window._scored) { window._scored=true; sessionScore.push(false); updateScoreDots(); }
+      // shake + clear after 1.2s so they can try again
+      setTimeout(()=>{
+        inp.value = '';
+        inp.classList.remove('wrong');
+        const fb = document.getElementById('feedback-box');
+        if(fb) fb.className = 'feedback-box';
+        inp.focus();
+        window._scored = true; // keep miss recorded
+      }, 1200);
+      return; // don't lock question — allow retry
     }
+
   } else if(currentMode === 'error'){
     if(window._huntSelected < 0){ document.getElementById('hint-text').textContent = 'Click a word first.'; return; }
     const words = item.q.split(' ');
     const correctWord = item.a.toLowerCase();
     const selected = words[window._huntSelected].toLowerCase().replace(/[.,!?]/g,'');
-    // check if selected word is part of the correct answer region
     correct = item.a.toLowerCase().includes(selected) || selected.includes(correctWord.split(' ')[0]);
     const btn = document.querySelector(`.word-btn[data-i="${window._huntSelected}"]`);
     if(btn) btn.classList.add(correct?'correct-pick':'wrong-pick');
-    // highlight the actual error region
     const ansWords = item.a.toLowerCase().split(' ');
     document.querySelectorAll('.word-btn').forEach(b=>{
       const w = b.textContent.toLowerCase().replace(/[.,!?]/g,'');
       if(ansWords.some(aw=>aw.includes(w)||w.includes(aw))) b.classList.add('correct-pick');
     });
     showFeedback(correct, 'Correct phrase: "' + item.a + '"', '');
+
+    if(!correct){
+      if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
+      // reset word selection after 1.2s
+      setTimeout(()=>{
+        document.querySelectorAll('.word-btn').forEach(b=>b.classList.remove('selected','wrong-pick'));
+        const fb = document.getElementById('feedback-box');
+        if(fb) fb.className = 'feedback-box';
+        window._huntSelected = -1;
+      }, 1200);
+      return;
+    }
   }
 
+  // correct — lock and auto-advance after 900ms
+  if(!window._scored){ sessionScore.push(true); }
+  window._scored = false;
   exAnswered = true;
-  sessionScore.push(correct);
   updateScoreDots();
-  document.getElementById('btn-check').textContent = 'Next →';
-  document.getElementById('btn-check').onclick = nextEx;
+  setTimeout(()=>nextEx(), 900);
 }
 
 function showFeedback(correct, answer, given){
@@ -443,6 +465,7 @@ function showFeedback(correct, answer, given){
 
 function nextEx(){
   exIndex++;
+  window._scored = false;
   renderEx();
 }
 
