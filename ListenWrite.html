@@ -1341,6 +1341,7 @@ let inputEl        = null;
 let locked         = false;   // prevent double-check while animating
 let sessionCorrect = 0;       // first-try correct count this batch
 let wordWasWrong   = false;   // did current word get at least one wrong attempt?
+let wrongAttempts  = 0;       // wrong attempts for current word (hint shows after 3)
 
 // ══════════════════════════════════════
 //  SOUND EFFECTS  (Web Audio API — no external files)
@@ -1651,6 +1652,7 @@ function renderCard(animate) {
   }
 
   // Reset feedback
+  wrongAttempts = 0;
   const hint = document.getElementById('correct-word-hint');
   hint.classList.add('hidden');
   hint.innerHTML = '';
@@ -1702,26 +1704,34 @@ function checkAnswer() {
     setTimeout(() => advance(), 950);
 
   } else {
-    // ✗ Wrong — show correct word, let them retry
+    // ✗ Wrong
     wordWasWrong = true;
+    wrongAttempts++;
     playWrongSound();
     inputEl.classList.remove('correct');
     inputEl.classList.add('wrong');
 
     const hint = document.getElementById('correct-word-hint');
-    hint.innerHTML = `الكلمة الصحيحة: <strong>${words[idx].english}</strong>`;
-    hint.classList.remove('hidden');
 
-    setStatus('error', '✗ حاول مرة أخرى');
+    if (wrongAttempts >= 3) {
+      // After 3 wrong attempts: reveal the word, let them type it to proceed
+      hint.innerHTML = `اكتب هذه الكلمة: <strong>${words[idx].english}</strong>`;
+      hint.classList.remove('hidden');
+      setStatus('error', `✗ اكتب الكلمة الصحيحة للمتابعة`);
+    } else {
+      // 1st or 2nd wrong: just shake, no hint
+      const remaining = 3 - wrongAttempts;
+      setStatus('error', `✗ حاول مرة أخرى — ${remaining} ${remaining === 1 ? 'محاولة' : 'محاولات'} متبقية`);
+    }
 
-    // Clear and re-focus so they can keep trying (hint stays visible)
+    // Clear input and re-focus
     setTimeout(() => {
       if (!inputEl || locked) return;
       inputEl.value = '';
       inputEl.classList.remove('wrong');
       inputEl.focus();
-      setStatus('hint', 'اكتب الكلمة الصحيحة ↑');
-    }, 1300);
+      if (wrongAttempts < 3) setStatus('hint', 'اضغط Enter للتحقق');
+    }, 1000);
   }
 }
 
