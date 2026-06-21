@@ -1625,13 +1625,13 @@ C1: {
 };
 
 Object.keys(EXTRA).forEach(level => {
-  if (!window.WORDS_DB[level]) return;
+  if (!WORDS_DB[level]) return;
   Object.keys(EXTRA[level]).forEach(topic => {
-    if (!window.WORDS_DB[level][topic]) return;
-    const existingWords = new Set(window.WORDS_DB[level][topic].map(e => e.word.toLowerCase()));
+    if (!WORDS_DB[level][topic]) return;
+    const existingWords = new Set(WORDS_DB[level][topic].map(e => e.word.toLowerCase()));
     EXTRA[level][topic].forEach(entry => {
       if (!existingWords.has(entry.word.toLowerCase())) {
-        window.WORDS_DB[level][topic].push(entry);
+        WORDS_DB[level][topic].push(entry);
       }
     });
   });
