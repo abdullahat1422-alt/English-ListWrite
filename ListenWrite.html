@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ListenWrite — اكتب ما تسمع</title>
+<script src="words_db.js"></script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -46,8 +49,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 24px 16px;
+}
+
+/* Center the practice card vertically but not the topic grid */
+body.practice-mode {
+  justify-content: center;
 }
 
 .hidden { display: none !important; }
@@ -106,22 +114,41 @@ body {
   background: linear-gradient(90deg, var(--accent-tint), var(--accent), var(--accent-tint));
 }
 
+/* ── Audio controls row ── */
+.audio-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 /* ── Speaker button ── */
 .speaker-btn {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  width: 38px;
-  height: 38px;
+  position: relative;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--surface);
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   color: var(--text-3);
   transition: all 0.18s var(--ease-out);
+}
+.speaker-btn .key-hint {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  line-height: 1;
+  font-family: var(--font-body);
+  transition: color 0.18s ease;
 }
 .speaker-btn:hover {
   border-color: var(--accent);
@@ -129,6 +156,7 @@ body {
   background: var(--accent-tint);
   transform: scale(1.07);
 }
+.speaker-btn:hover .key-hint { color: var(--accent); }
 .speaker-btn.playing {
   border-color: var(--accent);
   color: var(--accent);
@@ -140,6 +168,65 @@ body {
   70%  { box-shadow: 0 0 0 9px rgba(91,140,116,0); }
   100% { box-shadow: 0 0 0 0px rgba(91,140,116,0); }
 }
+
+/* smaller secondary audio buttons */
+.slow-btn, .sentence-btn {
+  width: 36px;
+  height: 36px;
+  opacity: 0.75;
+}
+.slow-btn:hover, .sentence-btn:hover { opacity: 1; }
+
+/* accent flag toggle */
+.accent-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s var(--ease-out);
+  opacity: 0.8;
+  line-height: 1;
+}
+.accent-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  opacity: 1;
+  transform: scale(1.07);
+}
+
+/* ── Back button ── */
+.back-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--text-3);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: all 0.18s var(--ease-out);
+  z-index: 5;
+}
+.back-btn:hover {
+  border-color: var(--border-2);
+  color: var(--text-2);
+  background: var(--bg);
+  transform: translateX(-2px);
+}
+.back-label { letter-spacing: 0.01em; }
 
 /* ── Arabic section ── */
 .arabic-section {
@@ -361,169 +448,1200 @@ body {
 .btn-restart:hover  { opacity: 0.88; transform: translateY(-2px); }
 .btn-restart:active { transform: scale(0.97); }
 
+/* ── Level badge & back link ── */
+.level-nav {
+  position: fixed;
+  top: 14px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+.back-link {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.18s ease;
+}
+.back-link:hover { color: var(--accent); }
+.level-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+}
+
+/* ── Topic Selector ── */
+.topic-selector-wrap {
+  width: 100%;
+  max-width: 580px;
+  padding-top: 52px;
+}
+.topic-header {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+.topic-header-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+.topic-header-title {
+  font-family: var(--font-arabic);
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 700;
+  color: var(--text);
+  direction: rtl;
+}
+.topic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.topic-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 16px 14px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.2s var(--ease-out),
+              box-shadow 0.2s var(--ease-out),
+              border-color 0.2s ease;
+  animation: fadeUp 0.4s var(--ease-out) both;
+  box-shadow: 0 2px 6px rgba(38,33,27,0.05);
+}
+.topic-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(38,33,27,0.10);
+  border-color: var(--accent);
+}
+.topic-card:hover .topic-card-en { color: var(--accent); }
+.topic-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.topic-emoji { font-size: 1.35rem; line-height: 1; }
+.topic-order {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-deep);
+  background: var(--accent-tint);
+  padding: 2px 7px;
+  border-radius: 9999px;
+  line-height: 1.6;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.topic-card:hover .topic-order { background: var(--accent); color: #fff; }
+
+/* Bilingual topic name */
+.topic-card-ar {
+  font-family: var(--font-arabic);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  direction: rtl;
+  text-align: right;
+}
+.topic-card-en {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-3);
+  direction: ltr;
+  text-align: left;
+  letter-spacing: 0.01em;
+  transition: color 0.18s ease;
+}
+.topic-card-count {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  direction: ltr;
+  margin-top: 4px;
+}
+/* Resume row inside topic card */
+.resume-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.resume-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: background 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+.resume-btn:hover { background: var(--accent-deep); transform: scale(1.04); }
+.restart-link {
+  font-size: 0.63rem;
+  color: var(--text-3);
+  text-decoration: none;
+}
+.restart-link:hover { color: var(--text-2); text-decoration: underline; }
+
+/* Completed topic card */
+.topic-card-done {
+  border-color: var(--success);
+  background: var(--success-tint);
+}
+.topic-card-done .topic-card-ar,
+.topic-card-done .topic-card-en { color: var(--success); }
+
+/* stagger grid animations */
+.topic-card:nth-child(1)  { animation-delay: 0.04s; }
+.topic-card:nth-child(2)  { animation-delay: 0.08s; }
+.topic-card:nth-child(3)  { animation-delay: 0.12s; }
+.topic-card:nth-child(4)  { animation-delay: 0.16s; }
+.topic-card:nth-child(5)  { animation-delay: 0.20s; }
+.topic-card:nth-child(6)  { animation-delay: 0.24s; }
+.topic-card:nth-child(7)  { animation-delay: 0.28s; }
+.topic-card:nth-child(8)  { animation-delay: 0.32s; }
+.topic-card:nth-child(9)  { animation-delay: 0.36s; }
+.topic-card:nth-child(10) { animation-delay: 0.40s; }
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .card { padding: 40px 24px 36px; border-radius: 20px; }
   .sentence-wrap { font-size: 0.96rem; gap: 2px; }
   .arabic-def { font-size: 1rem; }
+  .topic-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .topic-card { padding: 14px 12px 12px; }
 }
+
+/* ══════════════════════════════════════
+   AUTH OVERLAY
+══════════════════════════════════════ */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 48px 44px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.auth-logo {
+  font-size: 2.6rem;
+  margin-bottom: 12px;
+}
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.auth-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-2);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-2);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.18s var(--ease-out);
+  box-shadow: 0 2px 8px rgba(38,33,27,0.06);
+}
+.google-btn:hover {
+  border-color: #4285f4;
+  background: #f8f9ff;
+  box-shadow: 0 4px 16px rgba(66,133,244,0.15);
+  transform: translateY(-1px);
+}
+.google-btn svg { flex-shrink: 0; }
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-note {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin-top: 20px;
+  line-height: 1.5;
+}
+
+/* ── User bar (top of topic selector) ── */
+.user-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.user-bar-left { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-tint);
+}
+.user-avatar-placeholder {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--accent);
+}
+.user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.user-streak {
+  font-size: 0.75rem;
+  color: var(--text-2);
+}
+.signout-btn {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.signout-btn:hover { color: var(--error); border-color: var(--error); }
+
+/* ── In-app notification cards ── */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  animation: fadeUp 0.3s var(--ease-out) both;
+  position: relative;
+}
+.notif-card.streak  { border-color: #f59e0b; background: #fffbeb; }
+.notif-card.milestone { border-color: var(--accent); background: var(--accent-tint); }
+.notif-card.tip     { border-color: #818cf8; background: #f0f0ff; }
+.notif-card.reminder { border-color: var(--border-2); background: var(--bg-2); }
+.notif-icon { font-size: 1.3rem; margin-top: 1px; flex-shrink: 0; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.notif-text { font-size: 0.77rem; color: var(--text-2); line-height: 1.45; }
+.notif-dismiss {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-3);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.notif-dismiss:hover { color: var(--text); }
 </style>
 </head>
 <body>
 
+<!-- ══ AUTH OVERLAY (hidden when logged in) ══ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">🎧</div>
+    <div class="auth-title">ListenWrite</div>
+    <div class="auth-subtitle">
+      تعلّم الإنجليزية بطريقة ممتعة<br>
+      سجّل دخولك لحفظ تقدمك على جميع أجهزتك
+    </div>
+
+    <button class="google-btn" id="google-signin-btn" onclick="signInWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+      </svg>
+      المتابعة مع Google
+    </button>
+
+    <div class="auth-note">
+      بتسجيل الدخول توافق على حفظ تقدمك التعليمي في قاعدة البيانات.<br>
+      لن تُشارك بياناتك مع أي طرف ثالث.
+    </div>
+  </div>
+</div>
+
 <div class="progress-track">
   <div class="progress-fill" id="progress-fill"></div>
+</div>
+<div class="level-nav">
+  <a class="back-link" href="index.html">← الرئيسية</a>
+  <span class="level-badge" id="level-badge"></span>
 </div>
 <div class="counter" id="counter"></div>
 
 <div class="scene" id="scene">
+  <!-- filled by JS: either topic selector or practice card -->
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  SUPABASE  CLIENT
+// ══════════════════════════════════════
+const SUPABASE_URL  = 'https://bnrjtfemuwsuszcquamd.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucmp0ZmVtdXdzdXN6Y3F1YW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NzE1NTMsImV4cCI6MjA5NzU0NzU1M30.B3z36IMRsjKrbugmgiwFjpOdd55Mn0uELqAkxdWUUSY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentUser    = null;   // auth.User object
+let currentProfile = null;   // profiles row
+
+// ── Google OAuth ──
+async function signInWithGoogle() {
+  const btn = document.getElementById('google-signin-btn');
+  btn.disabled = true;
+  btn.textContent = 'جاري التحويل…';
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+  if (error) { btn.disabled = false; btn.textContent = 'حدث خطأ — حاول مجدداً'; }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = currentProfile = null;
+  document.getElementById('auth-overlay').style.display = 'flex';
+  // go to topic selector base
+  window.location.href = 'ListenWrite.html?level=' + level;
+}
+
+// ── Fetch / upsert profile ──
+async function loadProfile(user) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (!error && data) { currentProfile = data; return data; }
+  // profile created by trigger on first login; retry once
+  await new Promise(r => setTimeout(r, 800));
+  const { data: d2 } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = d2;
+  return d2;
+}
+
+// ── Progress helpers (Supabase) ──
+async function loadAllProgress() {
+  if (!currentUser) return {};
+  const { data } = await sb.from('progress').select('*').eq('user_id', currentUser.id);
+  if (!data) return {};
+  // reshape into same format as localStorage: { A1: { topic: {done,correct,attempts,lastFrom} } }
+  const out = {};
+  data.forEach(r => {
+    if (!out[r.level]) out[r.level] = {};
+    out[r.level][r.topic] = { done: r.done, correct: r.correct, attempts: r.attempts, lastFrom: r.last_from };
+  });
+  return out;
+}
+
+async function upsertProgress(lv, tp, patch) {
+  if (!currentUser) return;
+  await sb.from('progress').upsert({
+    user_id:   currentUser.id,
+    level:     lv,
+    topic:     tp,
+    done:      patch.done      ?? 0,
+    correct:   patch.correct   ?? 0,
+    attempts:  patch.attempts  ?? 0,
+    last_from: patch.lastFrom  ?? 0,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,level,topic' });
+}
+
+// ── Notifications ──
+async function loadNotifications() {
+  if (!currentUser) return [];
+  const { data } = await sb.from('notifications')
+    .select('*').eq('user_id', currentUser.id)
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+    .limit(5);
+  return data || [];
+}
+
+async function dismissNotification(id) {
+  await sb.from('notifications').update({ is_read: true }).eq('id', id);
+}
+
+// ── Render user bar ──
+function renderUserBar() {
+  const p = currentProfile;
+  if (!p) return '';
+  const initials = (p.username || 'U').slice(0, 2).toUpperCase();
+  const avatarHtml = p.avatar_url
+    ? `<img class="user-avatar" src="${p.avatar_url}" alt="${p.username}">`
+    : `<div class="user-avatar-placeholder">${initials}</div>`;
+  const streakTxt = p.streak > 0 ? `🔥 ${p.streak} ${p.streak === 1 ? 'يوم' : 'أيام'}` : 'ابدأ سلسلتك اليوم!';
+  return `
+    <div class="user-bar">
+      <div class="user-bar-left">
+        ${avatarHtml}
+        <div>
+          <div class="user-name">${p.username}</div>
+          <div class="user-streak">${streakTxt}</div>
+        </div>
+      </div>
+      <button class="signout-btn" onclick="signOut()">تسجيل الخروج</button>
+    </div>`;
+}
+
+// ── Render notification cards ──
+const NOTIF_ICONS = { streak: '🔥', milestone: '🏆', tip: '💡', reminder: '⏰' };
+function renderNotifCards(notifs) {
+  if (!notifs.length) return '';
+  const cards = notifs.map(n => `
+    <div class="notif-card ${n.type}" id="notif-${n.id}">
+      <span class="notif-icon">${NOTIF_ICONS[n.type] || '📌'}</span>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-text">${n.body}</div>
+      </div>
+      <button class="notif-dismiss" onclick="dismissNotif(${n.id})" title="إغلاق">✕</button>
+    </div>`).join('');
+  return `<div class="notif-list">${cards}</div>`;
+}
+
+async function dismissNotif(id) {
+  document.getElementById('notif-' + id)?.remove();
+  await dismissNotification(id);
+}
+
+// ── Bootstrap: check session on page load ──
+let _progressCache = {};   // in-memory cache after load
+
+async function bootApp(user) {
+  currentUser = user;
+  await loadProfile(user);
+  _progressCache = await loadAllProgress();
+  // Merge any local progress made before sign-in
+  mergeLocalToCloud();
+  document.getElementById('auth-overlay').style.display = 'none';
+  // Run the normal app init
+  appInit();
+}
+
+async function mergeLocalToCloud() {
+  // If localStorage has progress and user is now signed in, push it up
+  try {
+    const local = JSON.parse(localStorage.getItem('lw_progress') || '{}');
+    for (const lv of Object.keys(local)) {
+      for (const tp of Object.keys(local[lv])) {
+        const rec = local[lv][tp];
+        const cloud = (_progressCache[lv] || {})[tp];
+        // Only push if local is ahead
+        if (!cloud || rec.done > (cloud.done || 0)) {
+          await upsertProgress(lv, tp, { done: rec.done, correct: rec.correct, attempts: rec.attempts, lastFrom: rec.lastFrom || 0 });
+        }
+      }
+    }
+    localStorage.removeItem('lw_progress');
+  } catch (_) {}
+}
+
+// ── Override progress functions to use Supabase ──
+// These REPLACE the localStorage versions defined later in the script
+function getProgress()  { return _progressCache; }
+function saveProgress() { /* no-op: we upsert directly */ }
+
+function getTopicProg(lv, tp) {
+  return (_progressCache[lv] && _progressCache[lv][tp]) || { done: 0, correct: 0, attempts: 0, lastFrom: 0 };
+}
+
+function saveLastPosition(lv, tp, batchFrom) {
+  const cur = getTopicProg(lv, tp);
+  if (!_progressCache[lv]) _progressCache[lv] = {};
+  _progressCache[lv][tp] = { ...cur, lastFrom: batchFrom };
+  upsertProgress(lv, tp, _progressCache[lv][tp]);
+}
+
+function markTopicProgress(lv, tp, batchCorrect, batchAttempts) {
+  const cur = getTopicProg(lv, tp);
+  const updated = {
+    done:      Math.max(cur.done || 0, nextFrom),
+    correct:   (cur.correct  || 0) + batchCorrect,
+    attempts:  (cur.attempts || 0) + batchAttempts,
+    lastFrom:  Math.max(cur.done || 0, nextFrom)
+  };
+  if (!_progressCache[lv]) _progressCache[lv] = {};
+  _progressCache[lv][tp] = updated;
+  upsertProgress(lv, tp, updated);
+}
+
+// ── Session listener ──
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    await bootApp(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
+
+// ── Check session immediately (handles OAuth redirect) ──
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    await bootApp(session.user);
+  } else {
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+})();
+
+// ══════════════════════════════════════
+//  LOAD LEVEL FROM URL
+// ══════════════════════════════════════
+const VALID_LEVELS = ['A1','A2','B1','B2','C1'];
+const urlParams = new URLSearchParams(window.location.search);
+const urlLevel  = urlParams.get('level') || 'A1';
+const level     = VALID_LEVELS.includes(urlLevel) ? urlLevel : 'A1';
+const urlTopic  = urlParams.get('topic') || '';
+const urlFrom   = Math.max(0, parseInt(urlParams.get('from') || '0', 10));
+const BATCH     = 10;
+
+// ══════════════════════════════════════
+//  PROGRESS SYSTEM  (Supabase — functions defined above in auth block)
+//  getLevelProg still needs defining here (reads from _progressCache)
+// ══════════════════════════════════════
+function getLevelProg(lv) {
+  const p = getProgress();
+  const topics = getTopics(lv);
+  let totalW = 0, doneW = 0;
+  topics.forEach(t => {
+    const cnt = getWordsByTopic(lv, t).length;
+    totalW += cnt;
+    doneW  += Math.min((p[lv] && p[lv][t] ? p[lv][t].done : 0), cnt);
+  });
+  return { done: doneW, total: totalW, pct: totalW ? Math.round(doneW / totalW * 100) : 0 };
+}
+function getResumeFrom(lv, tp) {
+  const tp2 = getTopicProg(lv, tp);
+  return Math.max(tp2.lastFrom || 0, tp2.done || 0);
+}
+
+// ══════════════════════════════════════
+// Set level badge text and accent color per level
+const LEVEL_COLORS = {
+  A1: { accent: '#5b8c74', tint: '#e6f0eb', deep: '#3a6652', shadow: 'rgba(91,140,116,0.30)' },
+  A2: { accent: '#b8923a', tint: '#f5ead9', deep: '#7a5a18', shadow: 'rgba(184,146,58,0.30)' },
+  B1: { accent: '#b85c3a', tint: '#f8ece7', deep: '#7a3018', shadow: 'rgba(184,92,58,0.30)'  },
+  B2: { accent: '#4a6b8c', tint: '#e2eaf3', deep: '#2a4060', shadow: 'rgba(74,107,140,0.30)' },
+  C1: { accent: '#7a4a7a', tint: '#f0e6f0', deep: '#4e2a4e', shadow: 'rgba(122,74,122,0.30)' },
+};
+const col = LEVEL_COLORS[level];
+document.documentElement.style.setProperty('--accent',      col.accent);
+document.documentElement.style.setProperty('--accent-tint', col.tint);
+document.documentElement.style.setProperty('--accent-deep', col.deep);
+
+document.getElementById('level-badge').textContent = level;
+// If a topic is active, update back-link to go to topic selector
+if (urlTopic) {
+  const backLink = document.querySelector('.back-link');
+  if (backLink) {
+    backLink.href = `ListenWrite.html?level=${level}`;
+    backLink.textContent = `← ${decodeURIComponent(urlTopic)}`;
+  }
+}
+
+// ══════════════════════════════════════
+//  TOPIC + VOCABULARY — from words_db.js
+// ══════════════════════════════════════
+
+// Normalize raw words — slice from urlFrom for batch support
+function loadWords(topic) {
+  const raw   = topic ? getWordsByTopic(level, topic) : getAllWords(level);
+  const batch = raw.slice(urlFrom, urlFrom + BATCH);
+  return batch.map(w => ({
+    arabic:    w.arabic,
+    arabicDef: w.pos ? posLabel(w.pos) : '',
+    english:   w.word,
+    sentence:  w.sentence
+  }));
+}
+
+// Total words available for this topic (for progress footer)
+const totalTopicWords = urlTopic ? getWordsByTopic(level, urlTopic).length : 0;
+const nextFrom        = urlFrom + BATCH;
+const remaining       = Math.max(0, totalTopicWords - nextFrom);
+
+const words = urlTopic ? loadWords(urlTopic) : [];
+
+function posLabel(pos) {
+  const map = {
+    verb: 'فعل', noun: 'اسم', adjective: 'صفة', adverb: 'ظرف',
+    preposition: 'حرف جر', conjunction: 'حرف ربط'
+  };
+  return map[pos] || pos;
+}
+
+// ══════════════════════════════════════
+//  TOPIC SELECTOR
+// ══════════════════════════════════════
+const TOPIC_EMOJIS = {
+  "People & Family": "👨‍👩‍👧", "Clothes": "👕",
+  "Food & Drinks": "🍎",        "Places": "🏫",
+  "Daily Actions": "⚡",         "Numbers & Time": "⏰",
+  "Colors & Shapes": "🎨",      "Objects Around Me": "📱",
+  "Body Parts": "✋",            "Basic Feelings": "😊",
+  "Shopping": "🛍️",             "Travel": "✈️",
+  "Health": "💊",                "Time & Plans": "📅",
+  "Feelings": "💭",              "Weather": "⛅",
+  "Directions": "🗺️",           "Home & Rooms": "🏠",
+  "Hobbies": "🎸",               "Daily Problems": "🔧",
+  "Opinions": "💬",              "Problems & Solutions": "🧩",
+  "Work & Skills": "💼",         "Technology": "💻",
+  "Environment": "🌱",           "Education": "📚",
+  "Social Life": "🤝",           "Money & Lifestyle": "💰",
+  "Personal Experiences": "📖",  "Goals & Future": "🎯",
+  "Cause & Effect": "⚖️",        "Compare & Contrast": "🔄",
+  "Research & Data": "📊",       "Professional Writing": "✍️",
+  "Debate & Argument": "🗣️",     "Career Development": "📈",
+  "Media & Communication": "📡", "Society & Culture": "🌍",
+  "Health & Wellbeing": "🏥",    "Environment & Sustainability": "♻️",
+  "Critical Thinking": "🧠",     "Academic Writing": "📝",
+  "Policy & Compliance": "📋",   "Advanced Environment": "🌊",
+  "Precision Words": "🔬",       "Research Methodology": "🔭",
+  "Leadership & Strategy": "🏆", "Risk & Decision-Making": "🎲",
+  "Innovation & Technology": "🚀","Professional Communication": "🗂️",
+};
+
+const TOPIC_ARABIC = {
+  "People & Family": "الناس والعائلة",
+  "Clothes": "الملابس",
+  "Food & Drinks": "الطعام والمشروبات",
+  "Places": "الأماكن",
+  "Daily Actions": "الأفعال اليومية",
+  "Numbers & Time": "الأرقام والوقت",
+  "Colors & Shapes": "الألوان والأشكال",
+  "Objects Around Me": "أشياء من حولي",
+  "Body Parts": "أجزاء الجسم",
+  "Basic Feelings": "المشاعر الأساسية",
+  "Shopping": "التسوق",
+  "Travel": "السفر",
+  "Health": "الصحة",
+  "Time & Plans": "الوقت والخطط",
+  "Feelings": "المشاعر",
+  "Weather": "الطقس",
+  "Directions": "الاتجاهات",
+  "Home & Rooms": "البيت والغرف",
+  "Hobbies": "الهوايات",
+  "Daily Problems": "مشكلات يومية",
+  "Opinions": "الآراء",
+  "Problems & Solutions": "المشكلات والحلول",
+  "Work & Skills": "العمل والمهارات",
+  "Technology": "التكنولوجيا",
+  "Environment": "البيئة",
+  "Education": "التعليم",
+  "Social Life": "الحياة الاجتماعية",
+  "Money & Lifestyle": "المال ونمط الحياة",
+  "Personal Experiences": "التجارب الشخصية",
+  "Goals & Future": "الأهداف والمستقبل",
+  "Cause & Effect": "السبب والنتيجة",
+  "Compare & Contrast": "المقارنة والتباين",
+  "Research & Data": "البحث والبيانات",
+  "Professional Writing": "الكتابة المهنية",
+  "Debate & Argument": "الحوار والجدل",
+  "Career Development": "التطور الوظيفي",
+  "Media & Communication": "الإعلام والتواصل",
+  "Society & Culture": "المجتمع والثقافة",
+  "Health & Wellbeing": "الصحة والرفاهية",
+  "Environment & Sustainability": "البيئة والاستدامة",
+  "Critical Thinking": "التفكير النقدي",
+  "Academic Writing": "الكتابة الأكاديمية",
+  "Policy & Compliance": "السياسات والامتثال",
+  "Advanced Environment": "البيئة المتقدمة",
+  "Precision Words": "كلمات الدقة",
+  "Research Methodology": "منهجية البحث",
+  "Leadership & Strategy": "القيادة والاستراتيجية",
+  "Risk & Decision-Making": "المخاطرة وصنع القرار",
+  "Innovation & Technology": "الابتكار والتكنولوجيا",
+  "Professional Communication": "التواصل المهني",
+};
+
+function showTopicSelector() {
+  document.body.classList.remove('practice-mode');
+  document.getElementById('scene').innerHTML = '';
+  document.getElementById('progress-fill').style.width = '0';
+  document.getElementById('counter').textContent = '';
+
+  const topics = getTopics(level);
+
+  // Async: inject user bar + notifications after render
+  (async () => {
+    const scene = document.getElementById('scene');
+    const wrap  = scene.querySelector('.topic-selector-wrap');
+    if (!wrap) return;
+    // User bar
+    const userBarEl = document.createElement('div');
+    userBarEl.innerHTML = renderUserBar();
+    wrap.insertBefore(userBarEl, wrap.firstChild);
+    // Notification cards
+    const notifs = await loadNotifications();
+    if (notifs.length) {
+      const notifEl = document.createElement('div');
+      notifEl.innerHTML = renderNotifCards(notifs);
+      // Insert after user bar
+      wrap.insertBefore(notifEl, wrap.children[1]);
+    }
+  })();
+  const scene  = document.getElementById('scene');
+
+  // Wrapper that sets proper top padding
+  const wrap = document.createElement('div');
+  wrap.className = 'topic-selector-wrap';
+
+  const lp = getLevelProg(level);
+  const header = document.createElement('div');
+  header.className = 'topic-header';
+  header.innerHTML = `
+    <div class="topic-header-label">${level} · اختر موضوعاً</div>
+    <div class="topic-header-title">ما الموضوع الذي تريد أن تتدرّب عليه؟</div>
+    ${lp.done > 0 ? `
+    <div style="margin-top:14px;max-width:360px;margin-left:auto;margin-right:auto;">
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-2);margin-bottom:5px;">
+        <span>تقدّمك في المستوى ${level}</span>
+        <span style="font-weight:700;color:var(--accent)">${lp.pct}%</span>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${lp.pct}%;background:linear-gradient(90deg,var(--accent),var(--accent-deep));border-radius:3px;"></div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin-top:3px;text-align:center;">${lp.done} / ${lp.total} كلمة</div>
+    </div>` : ''}
+  `;
+  wrap.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.className = 'topic-grid';
+
+  topics.forEach((topic, i) => {
+    const wds    = getWordsByTopic(level, topic);
+    const href   = `ListenWrite.html?level=${level}&topic=${encodeURIComponent(topic)}`;
+    const emoji  = TOPIC_EMOJIS[topic] || '📌';
+    const arName = TOPIC_ARABIC[topic] || topic;
+    const num    = String(i + 1).padStart(2, '0');
+
+    // Progress for this topic
+    const tp     = getTopicProg(level, topic);
+    const tpDone = Math.min(tp.done, wds.length);
+    const tpPct  = wds.length ? Math.round(tpDone / wds.length * 100) : 0;
+    const isComplete = tpPct >= 100;
+    const accPct = tp.attempts > 0 ? Math.round(tp.correct / tp.attempts * 100) : null;
+
+    const progressHtml = tpDone > 0 ? `
+      <div style="margin-top:6px;">
+        <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${tpPct}%;background:${isComplete ? 'var(--success)' : 'var(--accent)'};border-radius:2px;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-3);margin-top:3px;">
+          <span>${tpPct}%${isComplete ? ' ✓' : ''}</span>
+          ${accPct !== null ? `<span>${accPct}% دقة</span>` : ''}
+        </div>
+      </div>` : '';
+
+    // Resume button if there's a saved mid-batch or completed position
+    const resumeFrom = getResumeFrom(level, topic);
+    const hasResume  = resumeFrom > 0 && resumeFrom < wds.length;
+    const resumeHref = `ListenWrite.html?level=${level}&topic=${encodeURIComponent(topic)}&from=${resumeFrom}`;
+
+    const card = document.createElement('div');
+    card.className = 'topic-card' + (isComplete ? ' topic-card-done' : '');
+    card.style.cursor = 'pointer';
+    card.innerHTML = `
+      <div class="topic-card-top">
+        <span class="topic-emoji">${emoji}</span>
+        <span class="topic-order">${num}</span>
+      </div>
+      <div class="topic-card-ar">${arName}</div>
+      <div class="topic-card-en">${topic}</div>
+      <div class="topic-card-count">${wds.length} words</div>
+      ${progressHtml}
+      ${hasResume ? `
+        <div class="resume-row">
+          <a class="resume-btn" href="${resumeHref}" onclick="event.stopPropagation()">
+            ▶ استأنف · كلمة ${resumeFrom + 1}
+          </a>
+          <a class="restart-link" href="${href}" onclick="event.stopPropagation()">من البداية</a>
+        </div>` : ''}
+    `;
+    card.addEventListener('click', () => {
+      window.location.href = hasResume ? resumeHref : href;
+    });
+    grid.appendChild(card);
+  });
+
+  wrap.appendChild(grid);
+  scene.appendChild(wrap);
+}
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let idx            = 0;
+let inputEl        = null;
+let locked         = false;   // prevent double-check while animating
+let sessionCorrect = 0;       // first-try correct count this batch
+let wordWasWrong   = false;   // did current word get at least one wrong attempt?
+
+// ══════════════════════════════════════
+//  SOUND EFFECTS  (Web Audio API — no external files)
+// ══════════════════════════════════════
+let _audioCtx = null;
+
+function _ctx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // Resume if suspended (browser autoplay policy)
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+// ✓ Correct — two ascending bell chimes (C5 → E5)
+function playCorrectSound() {
+  const ctx = _ctx();
+  [[523.25, 0], [659.25, 0.13]].forEach(([freq, delay]) => {
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.28, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+    osc.start(t);
+    osc.stop(t + 0.55);
+  });
+}
+
+// ✗ Wrong — two short descending buzzes
+function playWrongSound() {
+  const ctx = _ctx();
+  [[220, 0], [180, 0.14]].forEach(([freq, delay]) => {
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    osc.start(t);
+    osc.stop(t + 0.12);
+  });
+}
+
+// ══════════════════════════════════════
+//  VOICE SELECTION
+//  Accent pref: 'US' or 'GB', stored in localStorage
+// ══════════════════════════════════════
+let _voiceAccent = localStorage.getItem('lw_accent') || 'US';
+let _voiceUS = null;
+let _voiceGB = null;
+let _voicesReady = false;
+
+function pickVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  _voicesReady = true;
+
+  // ── US ENGLISH priority list ──
+  const usTests = [
+    v => v.name === 'Google US English',
+    v => /Microsoft Aria.*Natural/.test(v.name),
+    v => /Microsoft Jenny.*Natural/.test(v.name),
+    v => /Microsoft Guy.*Natural/.test(v.name),
+    v => /Microsoft Aria/.test(v.name),
+    v => /Microsoft Jenny/.test(v.name),
+    v => /Microsoft Guy/.test(v.name),
+    v => /Microsoft Davis/.test(v.name),
+    v => /Microsoft.*Neural.*Online/.test(v.name) && /en[-_]US/i.test(v.lang),
+    v => /Microsoft.*Online/.test(v.name) && /en[-_]US/i.test(v.lang),
+    v => v.name === 'Samantha' && /en[-_]US/i.test(v.lang),
+    v => v.name === 'Alex',
+    v => /en[-_]US/i.test(v.lang) && !/compact/i.test(v.name),
+    v => /en[-_]US/i.test(v.lang),
+    v => /^en/i.test(v.lang),
+  ];
+
+  // ── GB ENGLISH priority list ──
+  const gbTests = [
+    v => v.name === 'Google UK English Female',
+    v => v.name === 'Google UK English Male',
+    v => /Microsoft Libby/.test(v.name),
+    v => /Microsoft Hazel/.test(v.name),
+    v => /Microsoft Ryan/.test(v.name),
+    v => /Microsoft.*Neural.*Online/.test(v.name) && /en[-_]GB/i.test(v.lang),
+    v => /Microsoft.*Online/.test(v.name) && /en[-_]GB/i.test(v.lang),
+    v => v.name === 'Daniel' && /en[-_]GB/i.test(v.lang),
+    v => /en[-_]GB/i.test(v.lang) && !/compact/i.test(v.name),
+    v => /en[-_]GB/i.test(v.lang),
+    v => /^en/i.test(v.lang),
+  ];
+
+  for (const t of usTests) { const m = voices.find(t); if (m) { _voiceUS = m; break; } }
+  for (const t of gbTests) { const m = voices.find(t); if (m) { _voiceGB = m; break; } }
+
+  // Update indicator
+  _updateAccentBtn();
+}
+
+function _getBestVoice() {
+  return _voiceAccent === 'GB' ? (_voiceGB || _voiceUS) : (_voiceUS || _voiceGB);
+}
+
+function _updateAccentBtn() {
+  const btn = document.getElementById('accent-btn');
+  if (!btn) return;
+  const v = _getBestVoice();
+  const label = _voiceAccent === 'GB' ? '🇬🇧' : '🇺🇸';
+  btn.textContent = label;
+  btn.title = v ? `الصوت: ${v.name}` : 'اختر اللهجة';
+}
+
+function toggleAccent() {
+  _voiceAccent = _voiceAccent === 'US' ? 'GB' : 'US';
+  localStorage.setItem('lw_accent', _voiceAccent);
+  _updateAccentBtn();
+  // Play word immediately so user hears the new accent
+  if (urlTopic && words.length) playWord(false);
+}
+
+window.speechSynthesis.onvoiceschanged = pickVoices;
+pickVoices(); // try immediately (some browsers are sync)
+
+// ══════════════════════════════════════
+//  SPEECH
+//  Chrome bug: cancel() then speak() immediately can glitch.
+//  Fix: 80ms gap after cancel(), resume() if paused.
+//  Modes:
+//    playWord(false) → normal speed  (auto-play + key 1)
+//    playWord(true)  → slow  0.58x   (key 2)
+//    playSentence()  → full sentence  (key 3)
+// ══════════════════════════════════════
+let _speechTimer = null;
+
+function _doSpeak(text, rate) {
+  if (_speechTimer) clearTimeout(_speechTimer);
+  window.speechSynthesis.cancel();
+
+  const btn = document.getElementById('speaker-btn');
+  if (btn) btn.classList.remove('playing');
+
+  _speechTimer = setTimeout(() => {
+    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    if (!_voicesReady) pickVoices();
+
+    const voice = _getBestVoice();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang   = _voiceAccent === 'GB' ? 'en-GB' : 'en-US';
+    u.rate   = rate;
+    u.pitch  = 1;
+    u.volume = 1;
+    if (voice) u.voice = voice;
+
+    if (btn) {
+      btn.classList.add('playing');
+      u.onend   = () => btn.classList.remove('playing');
+      u.onerror = () => btn.classList.remove('playing');
+    }
+    window.speechSynthesis.speak(u);
+  }, 80);
+}
+
+// ══════════════════════════════════════
+//  BACK / SAVE POSITION
+// ══════════════════════════════════════
+function goBack() {
+  // Save current batch position before leaving
+  if (urlTopic) saveLastPosition(level, urlTopic, urlFrom);
+  window.speechSynthesis.cancel();
+  window.location.href = `ListenWrite.html?level=${level}`;
+}
+
+function playWord(slow = false) {
+  const word = words[idx]?.english;
+  if (!word) return;
+  // Slow rate by level: higher level = slightly slower for clarity
+  const levelRates = { A1: 0.80, A2: 0.78, B1: 0.75, B2: 0.72, C1: 0.70 };
+  const baseRate = levelRates[level] || 0.75;
+  _doSpeak(word, slow ? 0.55 : baseRate);
+}
+
+function playSentence() {
+  const w = words[idx];
+  if (!w) return;
+  const text = w.sentence.replace(/\{w\}/g, w.english);
+  _doSpeak(text, _voiceAccent === 'GB' ? 0.82 : 0.85);
+}
+
+// ══════════════════════════════════════
+//  PRACTICE CARD SHELL (injected once)
+// ══════════════════════════════════════
+const CARD_HTML = `
   <div class="card" id="card">
-
-    <button class="speaker-btn" id="speaker-btn" onclick="playWord()" title="استمع مرة أخرى">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+    <div class="audio-controls">
+      <button class="speaker-btn" id="speaker-btn" onclick="playWord(false)" title="استمع للكلمة (1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+        <span class="key-hint">[1]</span>
+      </button>
+      <button class="speaker-btn slow-btn" onclick="playWord(true)" title="استمع ببطء (2)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="key-hint">[2]</span>
+      </button>
+      <button class="speaker-btn sentence-btn" onclick="playSentence()" title="استمع للجملة كاملة (3)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="21" y1="10" x2="3" y2="10"/>
+          <line x1="21" y1="6"  x2="3" y2="6"/>
+          <line x1="21" y1="14" x2="3" y2="14"/>
+          <line x1="21" y1="18" x2="13" y2="18"/>
+        </svg>
+        <span class="key-hint">[3]</span>
+      </button>
+      <button class="accent-btn" id="accent-btn" onclick="toggleAccent()" title="تغيير اللهجة">🇺🇸</button>
+    </div>
+    <button class="back-btn" onclick="goBack()" title="رجوع للمواضيع (Esc)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
       </svg>
+      <span class="back-label">رجوع</span>
     </button>
-
     <div class="arabic-section">
       <div class="arabic-word" id="arabic-word"></div>
       <div class="arabic-def"  id="arabic-def"></div>
     </div>
-
     <div class="divider">
       <div class="divider-line-top"></div>
       <div class="divider-dot"></div>
       <div class="divider-line-bottom"></div>
     </div>
-
     <div class="english-section">
       <div class="sentence-wrap" id="sentence-wrap"></div>
       <div class="correct-word-hint hidden" id="correct-word-hint"></div>
       <div class="status hint-msg" id="status">اضغط Enter للتحقق</div>
     </div>
-
   </div>
-</div>
+`;
 
-<script>
-// ══════════════════════════════════════
-//  VOCABULARY
-// ══════════════════════════════════════
-const words = [
-  {
-    arabic: "نَميمة",
-    arabicDef: "تبادل الأحاديث حول حياة الآخرين، وغالباً ما تتضمن معلومات غير مؤكدة أو شائعات.",
-    english: "gossip",
-    sentence: "We should avoid {w} about our friends and focus on supporting each other instead."
-  },
-  {
-    arabic: "صَبر",
-    arabicDef: "القدرة على الانتظار والتحمل دون ضيق أو توتر.",
-    english: "patience",
-    sentence: "Learning a new language requires {w} and consistent daily practice."
-  },
-  {
-    arabic: "شَجاعة",
-    arabicDef: "القدرة على مواجهة الخوف والصعوبات بثبات وقوة.",
-    english: "courage",
-    sentence: "It takes real {w} to speak your mind in front of a large audience."
-  },
-  {
-    arabic: "تَواضع",
-    arabicDef: "إدراك حدود النفس وعدم التكبر على الآخرين.",
-    english: "humility",
-    sentence: "True leaders show {w} even during their greatest achievements."
-  },
-  {
-    arabic: "كَرَم",
-    arabicDef: "العطاء بسخاء دون توقع المقابل.",
-    english: "generosity",
-    sentence: "Her {w} toward strangers showed the true depth of her character."
-  },
-  {
-    arabic: "مُثابرة",
-    arabicDef: "الاستمرار في المحاولة رغم الصعوبات والإخفاقات.",
-    english: "perseverance",
-    sentence: "With {w}, you can overcome any obstacle you face in life."
-  },
-  {
-    arabic: "إخلاص",
-    arabicDef: "الوفاء والتمسك بالعهود مع الأصدقاء والأحبة.",
-    english: "loyalty",
-    sentence: "Friendship is built on trust and {w} to one another through all seasons."
-  },
-  {
-    arabic: "رَحمة",
-    arabicDef: "الشعور بألم الآخرين والرغبة الصادقة في مساعدتهم.",
-    english: "compassion",
-    sentence: "She showed deep {w} to everyone who was suffering around her."
-  },
-  {
-    arabic: "حِكمة",
-    arabicDef: "القدرة على اتخاذ القرارات الصائبة المبنية على التجربة والمعرفة.",
-    english: "wisdom",
-    sentence: "With age comes {w} and a much deeper understanding of the world."
-  },
-  {
-    arabic: "أَمانة",
-    arabicDef: "قول الحقيقة والتصرف بصدق في جميع الأحوال.",
-    english: "honesty",
-    sentence: "In every relationship, {w} is the foundation of genuine connection."
-  },
-  {
-    arabic: "طَموح",
-    arabicDef: "الرغبة القوية في تحقيق الأهداف والنجاح في الحياة.",
-    english: "ambition",
-    sentence: "His {w} drove him to achieve things that others said were impossible."
-  },
-  {
-    arabic: "امتنان",
-    arabicDef: "الشعور بالشكر والتقدير تجاه ما تملكه أو ما يقدمه لك الآخرون.",
-    english: "gratitude",
-    sentence: "Expressing {w} every day can significantly improve your overall well-being."
+function ensureCardShell() {
+  if (!document.getElementById('card')) {
+    document.getElementById('scene').innerHTML = CARD_HTML;
   }
-];
-
-// ══════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════
-let idx     = 0;
-let inputEl = null;
-let locked  = false; // prevent double-check while animating
-
-// ══════════════════════════════════════
-//  SPEECH
-// ══════════════════════════════════════
-function playWord() {
-  const word = words[idx].english;
-  window.speechSynthesis.cancel();
-
-  const u  = new SpeechSynthesisUtterance(word);
-  u.lang   = 'en-US';
-  u.rate   = 0.82;
-  u.pitch  = 1;
-
-  const btn = document.getElementById('speaker-btn');
-  if (btn) {
-    btn.classList.add('playing');
-    u.onend  = () => btn.classList.remove('playing');
-    u.onerror = () => btn.classList.remove('playing');
-  }
-
-  window.speechSynthesis.speak(u);
 }
 
 // ══════════════════════════════════════
 //  RENDER CARD
 // ══════════════════════════════════════
 function renderCard(animate) {
+  ensureCardShell();
   const w = words[idx];
-  locked = false;
+  locked       = false;
+  wordWasWrong = false;
 
   document.getElementById('arabic-word').textContent = w.arabic;
-  document.getElementById('arabic-def').textContent  = w.arabicDef;
+  const defEl = document.getElementById('arabic-def');
+  if (w.arabicDef) {
+    defEl.textContent = w.arabicDef;
+    defEl.style.display = '';
+  } else {
+    defEl.style.display = 'none';
+  }
 
   // Build inline sentence
   const wrap  = document.getElementById('sentence-wrap');
@@ -580,9 +1698,12 @@ function renderCard(animate) {
     setTimeout(() => card.classList.remove('enter'), 400);
   }
 
+  // Sync accent button flag
+  _updateAccentBtn();
+
   // Auto-play word, then focus input
   setTimeout(() => {
-    playWord();
+    playWord(false);
     setTimeout(() => inputEl && inputEl.focus(), 280);
   }, 150);
 }
@@ -599,6 +1720,8 @@ function checkAnswer() {
   if (typed === correct) {
     // ✓ Correct
     locked = true;
+    if (!wordWasWrong) sessionCorrect++;   // count only first-try correct
+    playCorrectSound();
     inputEl.classList.remove('wrong');
     inputEl.classList.add('correct');
     inputEl.disabled = true;
@@ -609,6 +1732,8 @@ function checkAnswer() {
 
   } else {
     // ✗ Wrong — show correct word, let them retry
+    wordWasWrong = true;
+    playWrongSound();
     inputEl.classList.remove('correct');
     inputEl.classList.add('wrong');
 
@@ -667,44 +1792,103 @@ function setStatus(type, msg) {
 function showDone() {
   document.getElementById('progress-fill').style.width = '100%';
   document.getElementById('counter').textContent = '';
+
+  // Save progress to localStorage
+  if (urlTopic) markTopicProgress(level, urlTopic, sessionCorrect, words.length);
+
+  const topicLabel   = urlTopic ? decodeURIComponent(urlTopic) : '';
+  const doneCount    = urlFrom + words.length;
+  const continueHref = `ListenWrite.html?level=${level}&topic=${encodeURIComponent(urlTopic)}&from=${nextFrom}`;
+  const chooseHref   = `ListenWrite.html?level=${level}`;
+
+  // Accuracy for this batch
+  const accuracyPct  = words.length ? Math.round(sessionCorrect / words.length * 100) : 0;
+  const accuracyColor = accuracyPct >= 80 ? 'var(--success)' : accuracyPct >= 50 ? '#b8923a' : 'var(--error)';
+  const accuracyBar = `
+    <div style="margin:16px auto 0;max-width:260px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-2);margin-bottom:5px;">
+        <span>دقة هذه الجلسة</span>
+        <span style="font-weight:700;color:${accuracyColor}">${accuracyPct}%</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${accuracyPct}%;background:${accuracyColor};border-radius:3px;transition:width 0.8s ease;"></div>
+      </div>
+      <div style="font-size:0.74rem;color:var(--text-3);margin-top:4px;text-align:right;">
+        ${sessionCorrect} / ${words.length} من أول محاولة
+      </div>
+    </div>`;
+
+  // Topic-level cumulative progress
+  const tp     = getTopicProg(level, urlTopic);
+  const tpDone = Math.min(tp.done, totalTopicWords);
+  const tpPct  = totalTopicWords ? Math.round(tpDone / totalTopicWords * 100) : 0;
+  const topicBar = urlTopic ? `
+    <div style="margin:14px auto 0;max-width:260px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-2);margin-bottom:5px;">
+        <span>إجمالي الموضوع</span>
+        <span style="font-weight:700;color:var(--accent)">${tpPct}%</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${tpPct}%;background:var(--accent);border-radius:3px;transition:width 0.8s ease 0.2s;"></div>
+      </div>
+      <div style="font-size:0.74rem;color:var(--text-3);margin-top:4px;text-align:right;">
+        ${tpDone} / ${totalTopicWords} كلمة
+      </div>
+    </div>` : '';
+
+  // Level progress
+  const lp = getLevelProg(level);
+  const levelBar = `
+    <div style="margin:14px auto 0;max-width:260px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-2);margin-bottom:5px;">
+        <span>تقدّمك في ${level}</span>
+        <span style="font-weight:700;color:var(--accent)">${lp.pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${lp.pct}%;background:linear-gradient(90deg,var(--accent),var(--accent-deep));border-radius:3px;transition:width 0.8s ease 0.4s;"></div>
+      </div>
+    </div>`;
+
+  const continueBtn = remaining > 0 ? `
+    <a class="btn-restart" href="${continueHref}"
+       style="box-shadow:0 6px 22px ${col.shadow}">
+      تابع ← ${remaining} كلمة
+    </a>` : '';
+
+  const completedMsg = remaining === 0
+    ? `<div class="done-sub" style="color:var(--success);font-weight:600;margin-bottom:4px;">🎉 أتممت كل كلمات هذا الموضوع!</div>`
+    : `<div class="done-sub">${doneCount} / ${totalTopicWords} كلمة أنجزت</div>`;
+
   document.getElementById('scene').innerHTML = `
     <div class="done-card">
       <div class="done-icon">🌿</div>
       <div class="done-title">أحسنت!</div>
-      <div class="done-sub-en">Well done, keep it up.</div>
-      <div class="done-sub">You completed all ${words.length} words today.</div>
-      <button class="btn-restart" onclick="restartApp()">↺ &nbsp; تدرّب مرة أخرى</button>
+      <div class="done-sub-en">Well done — <em>${topicLabel}</em></div>
+      ${completedMsg}
+      ${accuracyBar}
+      ${topicBar}
+      ${levelBar}
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+        ${continueBtn}
+        <button class="btn-restart" onclick="restartApp()"
+          style="background:var(--bg-2);color:var(--text);box-shadow:none;">
+          ↺ &nbsp; أعِد هذه الكلمات
+        </button>
+        <a class="btn-restart" href="${chooseHref}"
+           style="background:var(--bg-2);color:var(--text);box-shadow:none;text-decoration:none;">
+          ← موضوع آخر
+        </a>
+      </div>
     </div>
   `;
 }
 
 function restartApp() {
-  idx = 0;
-  document.getElementById('scene').innerHTML = `
-    <div class="card" id="card">
-      <button class="speaker-btn" id="speaker-btn" onclick="playWord()" title="استمع مرة أخرى">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-        </svg>
-      </button>
-      <div class="arabic-section">
-        <div class="arabic-word" id="arabic-word"></div>
-        <div class="arabic-def"  id="arabic-def"></div>
-      </div>
-      <div class="divider">
-        <div class="divider-line-top"></div>
-        <div class="divider-dot"></div>
-        <div class="divider-line-bottom"></div>
-      </div>
-      <div class="english-section">
-        <div class="sentence-wrap" id="sentence-wrap"></div>
-        <div class="correct-word-hint hidden" id="correct-word-hint"></div>
-        <div class="status hint-msg" id="status">اضغط Enter للتحقق</div>
-      </div>
-    </div>
-  `;
+  idx            = 0;
+  sessionCorrect = 0;
+  wordWasWrong   = false;
+  document.body.classList.add('practice-mode');
+  document.getElementById('scene').innerHTML = '';
   renderCard(false);
 }
 
@@ -712,14 +1896,46 @@ function restartApp() {
 //  INIT
 // ══════════════════════════════════════
 
-// Any keypress anywhere → redirect to input
-document.addEventListener('keydown', () => {
+// Global keydown:
+//   "1"     → replay word (intercepted before input redirect)
+//   anything else → redirect to input so user can type immediately
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    if (urlTopic) goBack();
+    return;
+  }
+  if (e.key === '1') {
+    e.preventDefault();
+    if (urlTopic && words.length) playWord(false);
+    return;
+  }
+  if (e.key === '2') {
+    e.preventDefault();
+    if (urlTopic && words.length) playWord(true);
+    return;
+  }
+  if (e.key === '3') {
+    e.preventDefault();
+    if (urlTopic && words.length) playSentence();
+    return;
+  }
   if (inputEl && !locked && document.activeElement !== inputEl) {
     inputEl.focus();
   }
 });
 
-renderCard(false);
+// ══════════════════════════════════════
+//  INIT — called by bootApp() after auth
+// ══════════════════════════════════════
+function appInit() {
+  if (!urlTopic) {
+    showTopicSelector();
+  } else {
+    document.body.classList.add('practice-mode');
+    renderCard(false);
+  }
+}
 </script>
 </body>
 </html>

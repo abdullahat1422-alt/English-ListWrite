@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English ListWrite — اختر مستواك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="words_db.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════ */
+:root {
+  --bg:        #faf8f5;
+  --bg-2:      #f2ece3;
+  --surface:   #ffffff;
+  --text:      #26211b;
+  --text-2:    #6a5c52;
+  --text-3:    #a89585;
+  --border:    #e6ddd3;
+  --border-2:  #d0c5b8;
+
+  --font-arabic:  'Amiri', serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', -apple-system, sans-serif;
+
+  --ease-out:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Level palette */
+  --a1-accent:  #5b8c74;  --a1-tint:  #e6f0eb;
+  --a2-accent:  #b8923a;  --a2-tint:  #f5edda;
+  --b1-accent:  #b85c3a;  --b1-tint:  #f5e8e3;
+  --b2-accent:  #4a6b8c;  --b2-tint:  #e3eaf5;
+  --c1-accent:  #7a4a7a;  --c1-tint:  #f0e6f0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  direction: rtl;
+}
+
+/* ══════════════════════════════════════
+   HEADER
+══════════════════════════════════════ */
+header {
+  padding: 40px 48px 0;
+  max-width: 1100px;
+  margin: 0 auto;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 56px;
+}
+
+.logo-mark {
+  width: 44px; height: 44px;
+  background: var(--text);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { color: white; }
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 1.25rem; font-weight: 700;
+  color: var(--text); direction: ltr; letter-spacing: -0.3px;
+}
+.logo-sub {
+  font-family: var(--font-arabic);
+  font-size: 0.9rem; color: var(--text-3); margin-right: 4px;
+}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 48px 56px;
+  animation: fadeUp 0.5s 0.06s var(--ease-out) both;
+}
+.hero-label {
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-3); margin-bottom: 14px; direction: ltr;
+}
+.hero-title {
+  font-family: var(--font-arabic);
+  font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;
+  line-height: 1.3; color: var(--text); margin-bottom: 14px;
+}
+.hero-sub {
+  font-family: var(--font-arabic);
+  font-size: 1.1rem; color: var(--text-2); line-height: 1.7;
+}
+
+/* ══════════════════════════════════════
+   LEVELS GRID
+══════════════════════════════════════ */
+.levels-grid {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 48px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.level-card:last-child { grid-column: 1 / -1; }
+
+/* ══════════════════════════════════════
+   LEVEL CARD
+══════════════════════════════════════ */
+.level-card {
+  background: var(--surface);
+  border-radius: 24px;
+  border: 1.5px solid var(--border);
+  padding: 36px 36px 0;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.22s var(--ease-out), border-color 0.22s ease;
+  box-shadow: 0 2px 8px rgba(38,33,27,0.06);
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+.level-card:nth-child(1) { animation-delay: 0.08s; }
+.level-card:nth-child(2) { animation-delay: 0.14s; }
+.level-card:nth-child(3) { animation-delay: 0.20s; }
+.level-card:nth-child(4) { animation-delay: 0.26s; }
+.level-card:nth-child(5) { animation-delay: 0.32s; }
+
+.level-card.open {
+  border-color: var(--card-accent);
+  box-shadow: 0 8px 32px rgba(38,33,27,0.10);
+}
+
+/* Right color stripe (RTL) */
+.level-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 4px;
+  border-radius: 0 24px 24px 0;
+  background: var(--card-accent);
+  transition: width 0.22s var(--ease-out);
+}
+.level-card.open::before,
+.level-card:hover::before { width: 6px; }
+
+/* Background glow */
+.level-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 80% 50%, var(--card-tint) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.level-card.open::after,
+.level-card:hover::after { opacity: 1; }
+
+/* ── Card Header (clickable toggle) ── */
+.card-header {
+  cursor: pointer;
+  padding-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+.card-header:hover .level-badge { transform: scale(1.08); }
+
+.level-badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--card-tint);
+  color: var(--card-accent);
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 700;
+  direction: ltr;
+  margin-bottom: 20px;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.card-body { position: relative; z-index: 1; }
+
+.level-ar-name {
+  font-family: var(--font-arabic);
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--text); margin-bottom: 4px; line-height: 1.3;
+}
+.level-en-name {
+  font-family: var(--font-body);
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--card-accent);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  direction: ltr; margin-bottom: 14px;
+}
+.level-desc {
+  font-family: var(--font-arabic);
+  font-size: 0.95rem; color: var(--text-2);
+  line-height: 1.65; margin-bottom: 24px;
+}
+
+/* Card footer */
+.card-footer {
+  display: flex;
+  align-items: center; justify-content: space-between;
+  direction: ltr;
+}
+.word-count {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; color: var(--text-3); font-weight: 500;
+}
+.word-count strong { color: var(--text-2); font-weight: 600; }
+
+.toggle-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px;
+  border-radius: 9999px;
+  background: var(--card-tint);
+  color: var(--card-accent);
+  font-family: var(--font-body);
+  font-size: 0.82rem; font-weight: 700;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-out);
+  direction: rtl; white-space: nowrap;
+  user-select: none;
+}
+.level-card.open .toggle-btn,
+.card-header:hover .toggle-btn {
+  background: var(--card-accent);
+  color: white;
+}
+.toggle-arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-out);
+  font-style: normal;
+}
+.level-card.open .toggle-arrow { transform: rotate(90deg); }
+
+/* ══════════════════════════════════════
+   TOPICS PANEL (accordion)
+══════════════════════════════════════ */
+.topics-panel {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.42s var(--ease-out),
+              opacity    0.28s ease,
+              padding    0.28s ease;
+  position: relative; z-index: 1;
+}
+.level-card.open .topics-panel {
+  max-height: 520px;
+  opacity: 1;
+  padding-bottom: 28px;
+}
+
+.topics-divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+
+.topics-label {
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3);
+  direction: ltr; margin-bottom: 12px;
+}
+
+.topics-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.topic-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-2);
+  font-size: 0.8rem; font-weight: 500;
+  direction: ltr;
+  border: 1.5px solid transparent;
+  transition: background 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease,
+              transform 0.15s ease;
+}
+.topic-item:hover {
+  background: var(--card-tint);
+  color: var(--card-accent);
+  border-color: var(--card-accent);
+  transform: translateX(-2px);
+}
+
+.topic-num {
+  font-size: 0.65rem; font-weight: 700;
+  color: var(--card-accent);
+  background: var(--card-tint);
+  min-width: 22px; height: 18px;
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.topic-item:hover .topic-num { background: var(--card-accent); color: #fff; }
+
+.topic-emoji-sm { font-size: 0.9rem; flex-shrink: 0; }
+.topic-name { flex: 1; line-height: 1.3; }
+
+/* ══════════════════════════════════════
+   LEVEL COLORS
+══════════════════════════════════════ */
+.card-a1 { --card-accent: var(--a1-accent); --card-tint: var(--a1-tint); }
+.card-a2 { --card-accent: var(--a2-accent); --card-tint: var(--a2-tint); }
+.card-b1 { --card-accent: var(--b1-accent); --card-tint: var(--b1-tint); }
+.card-b2 { --card-accent: var(--b2-accent); --card-tint: var(--b2-tint); }
+.card-c1 { --card-accent: var(--c1-accent); --card-tint: var(--c1-tint); }
+
+/* C1 card — special full-width header layout */
+.card-c1 .card-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 32px;
+  align-items: center;
+}
+.card-c1 .level-badge { margin-bottom: 0; }
+.card-c1 .card-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 24px;
+  align-items: center;
+}
+.card-c1 .card-footer { flex-direction: row-reverse; }
+
+/* ══════════════════════════════════════
+   DIVIDER
+══════════════════════════════════════ */
+.section-divider {
+  max-width: 1100px; margin: 0 auto 32px;
+  padding: 0 48px;
+  display: flex; align-items: center; gap: 16px;
+}
+.divider-label {
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-3); white-space: nowrap;
+}
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 700px) {
+  header, .hero, .levels-grid, .section-divider {
+    padding-right: 20px; padding-left: 20px;
+  }
+  .levels-grid { grid-template-columns: 1fr; }
+  .level-card:last-child { grid-column: 1; }
+  .card-c1 .card-header { display: block; }
+  .card-c1 .level-badge { margin-bottom: 20px; }
+  .card-c1 .card-body { display: block; }
+  .card-c1 .card-footer { margin-top: 24px; flex-direction: row; }
+  .level-card { padding: 28px 24px 0; border-radius: 18px; }
+  .topics-list { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo-row">
+    <div class="logo-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">English ListWrite</div>
+      <div class="logo-sub">تعلّم الإنجليزية بالكتابة والاستماع</div>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-label">Choose Your Level</div>
+  <h1 class="hero-title">اختر مستواك وابدأ رحلتك</h1>
+  <p class="hero-sub">
+    من المبتدئ إلى المحترف — كل مستوى مصمم خصيصاً بكلمات Oxford المعتمدة.
+    استمع، اكتب، وتقدّم خطوة بخطوة.
+  </p>
+</div>
+
+<!-- ── SECTION LABEL ── -->
+<div class="section-divider">
+  <div class="divider-line"></div>
+  <div class="divider-label">CEFR Levels</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ── LEVEL CARDS ── -->
+<div class="levels-grid">
+
+  <!-- A1 -->
+  <div class="level-card card-a1" data-level="A1">
+    <div class="card-header">
+      <div class="level-badge">A1</div>
+      <div class="card-body">
+        <div class="level-ar-name">مبتدئ</div>
+        <div class="level-en-name">Beginner</div>
+        <p class="level-desc">
+          ابدأ رحلتك من هنا. كلمات الحياة اليومية الأساسية التي تحتاجها في كل مكان — التحيات، الأرقام، الألوان، والعائلة.
+        </p>
+        <div class="card-footer">
+          <div class="word-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span><strong>10</strong> مواضيع</span>
+          </div>
+          <div class="toggle-btn">اختر الموضوع <i class="toggle-arrow">›</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="topics-panel">
+      <div class="topics-divider"></div>
+      <div class="topics-label">Topics — A1</div>
+      <div class="topics-list" id="topics-A1"></div>
+    </div>
+  </div>
+
+  <!-- A2 -->
+  <div class="level-card card-a2" data-level="A2">
+    <div class="card-header">
+      <div class="level-badge">A2</div>
+      <div class="card-body">
+        <div class="level-ar-name">أساسي</div>
+        <div class="level-en-name">Elementary</div>
+        <p class="level-desc">
+          وسّع قاموسك. موضوعات الطعام، السفر، العمل، والتسوق — كل ما تحتاجه للتواصل في المواقف اليومية.
+        </p>
+        <div class="card-footer">
+          <div class="word-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span><strong>10</strong> مواضيع</span>
+          </div>
+          <div class="toggle-btn">اختر الموضوع <i class="toggle-arrow">›</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="topics-panel">
+      <div class="topics-divider"></div>
+      <div class="topics-label">Topics — A2</div>
+      <div class="topics-list" id="topics-A2"></div>
+    </div>
+  </div>
+
+  <!-- B1 -->
+  <div class="level-card card-b1" data-level="B1">
+    <div class="card-header">
+      <div class="level-badge">B1</div>
+      <div class="card-body">
+        <div class="level-ar-name">متوسط</div>
+        <div class="level-en-name">Intermediate</div>
+        <p class="level-desc">
+          ارتقِ بلغتك. كلمات المشاعر، الآراء، الأحداث الجارية — ابدأ التعبير عن أفكارك بثقة ووضوح.
+        </p>
+        <div class="card-footer">
+          <div class="word-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span><strong>10</strong> مواضيع</span>
+          </div>
+          <div class="toggle-btn">اختر الموضوع <i class="toggle-arrow">›</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="topics-panel">
+      <div class="topics-divider"></div>
+      <div class="topics-label">Topics — B1</div>
+      <div class="topics-list" id="topics-B1"></div>
+    </div>
+  </div>
+
+  <!-- B2 -->
+  <div class="level-card card-b2" data-level="B2">
+    <div class="card-header">
+      <div class="level-badge">B2</div>
+      <div class="card-body">
+        <div class="level-ar-name">متقدم</div>
+        <div class="level-en-name">Upper Intermediate</div>
+        <p class="level-desc">
+          أعمق وأدق. مفردات أكاديمية ومهنية تمكّنك من فهم النصوص المعقدة والمشاركة في نقاشات متخصصة.
+        </p>
+        <div class="card-footer">
+          <div class="word-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span><strong>10</strong> مواضيع</span>
+          </div>
+          <div class="toggle-btn">اختر الموضوع <i class="toggle-arrow">›</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="topics-panel">
+      <div class="topics-divider"></div>
+      <div class="topics-label">Topics — B2</div>
+      <div class="topics-list" id="topics-B2"></div>
+    </div>
+  </div>
+
+  <!-- C1 — full width -->
+  <div class="level-card card-c1" data-level="C1">
+    <div class="card-header">
+      <div class="level-badge">C1</div>
+      <div class="card-body">
+        <div>
+          <div class="level-ar-name">احترافي</div>
+          <div class="level-en-name">Advanced</div>
+          <p class="level-desc">
+            قمة الإتقان. مفردات نخبة الكتّاب والمتحدثين — تعابير راقية، أسلوب أدبي، ودقة لغوية لا مثيل لها.
+          </p>
+        </div>
+        <div class="card-footer">
+          <div class="word-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span><strong>10</strong> مواضيع</span>
+          </div>
+          <div class="toggle-btn">اختر الموضوع <i class="toggle-arrow">›</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="topics-panel">
+      <div class="topics-divider"></div>
+      <div class="topics-label">Topics — C1</div>
+      <div class="topics-list" id="topics-C1"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  TOPIC EMOJIS
+// ══════════════════════════════════════
+const TOPIC_EMOJIS = {
+  "People & Family": "👨‍👩‍👧",  "Clothes": "👕",
+  "Food & Drinks": "🍎",         "Places": "🏫",
+  "Daily Actions": "⚡",          "Numbers & Time": "⏰",
+  "Colors & Shapes": "🎨",       "Objects Around Me": "📱",
+  "Body Parts": "✋",             "Basic Feelings": "😊",
+  "Shopping": "🛍️",              "Travel": "✈️",
+  "Health": "💊",                 "Time & Plans": "📅",
+  "Feelings": "💭",               "Weather": "⛅",
+  "Directions": "🗺️",            "Home & Rooms": "🏠",
+  "Hobbies": "🎨",               "Daily Problems": "🔧",
+  "Opinions": "💬",               "Problems & Solutions": "🧩",
+  "Work & Skills": "💼",          "Technology": "💻",
+  "Environment": "🌱",            "Education": "📚",
+  "Social Life": "🤝",            "Money & Lifestyle": "💰",
+  "Personal Experiences": "📖",   "Goals & Future": "🎯",
+  "Cause & Effect": "⚖️",         "Compare & Contrast": "🔄",
+  "Research & Data": "📊",        "Professional Writing": "✍️",
+  "Debate & Argument": "🗣️",      "Career Development": "📈",
+  "Media & Communication": "📡", "Society & Culture": "🌍",
+  "Health & Wellbeing": "🏥",     "Environment & Sustainability": "♻️",
+  "Critical Thinking": "🧠",      "Academic Writing": "📝",
+  "Policy & Compliance": "⚖️",    "Advanced Environment": "🌊",
+  "Precision Words": "🎯",        "Research Methodology": "🔬",
+  "Leadership & Strategy": "🏆", "Risk & Decision-Making": "🎲",
+  "Innovation & Technology": "🚀","Professional Communication": "💼",
+};
+
+// ══════════════════════════════════════
+//  INJECT TOPICS INTO EACH CARD
+// ══════════════════════════════════════
+['A1','A2','B1','B2','C1'].forEach(level => {
+  const container = document.getElementById('topics-' + level);
+  if (!container || typeof getTopics === 'undefined') return;
+
+  getTopics(level).forEach((topic, i) => {
+    const num   = String(i + 1).padStart(2, '0');
+    const emoji = TOPIC_EMOJIS[topic] || '📌';
+    const href  = `ListenWrite.html?level=${level}&topic=${encodeURIComponent(topic)}`;
+
+    const a = document.createElement('a');
+    a.className = 'topic-item';
+    a.href = href;
+    a.innerHTML = `
+      <span class="topic-num">${num}</span>
+      <span class="topic-emoji-sm">${emoji}</span>
+      <span class="topic-name">${topic}</span>
+    `;
+    container.appendChild(a);
+  });
+});
+
+// ══════════════════════════════════════
+//  ACCORDION — toggle on card-header click
+// ══════════════════════════════════════
+document.querySelectorAll('.level-card').forEach(card => {
+  card.querySelector('.card-header').addEventListener('click', () => {
+    const isOpen = card.classList.contains('open');
+
+    // Close all
+    document.querySelectorAll('.level-card').forEach(c => c.classList.remove('open'));
+
+    // Toggle current
+    if (!isOpen) card.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>
