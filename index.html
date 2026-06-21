@@ -116,6 +116,42 @@ header {
 }
 
 /* ══════════════════════════════════════
+   GRAMMAR BANNER
+══════════════════════════════════════ */
+.grammar-banner {
+  max-width: 1100px; margin: 0 auto 20px;
+  padding: 0 48px;
+  animation: fadeUp 0.5s 0.1s var(--ease-out) both;
+}
+.grammar-banner-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  background: linear-gradient(135deg, #1e4d78 0%, #2a6ba8 60%, #3a8fd4 100%);
+  border-radius: 20px; padding: 20px 28px;
+  color: #fff; flex-wrap: wrap;
+}
+.grammar-banner-text { flex: 1; min-width: 200px; }
+.grammar-banner-title {
+  font-family: var(--font-arabic); font-size: 1.15rem; font-weight: 700;
+  margin-bottom: 4px;
+}
+.grammar-banner-sub {
+  font-family: var(--font-arabic); font-size: .88rem; opacity: .85;
+}
+.grammar-banner-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.35);
+  border-radius: 9999px; padding: 10px 22px;
+  font-family: var(--font-body); font-size: .85rem; font-weight: 600;
+  color: #fff; text-decoration: none; white-space: nowrap;
+  transition: background .15s, transform .15s;
+}
+.grammar-banner-btn:hover { background: rgba(255,255,255,.28); transform: translateY(-1px); }
+@media (max-width: 600px) {
+  .grammar-banner { padding: 0 20px; }
+  .grammar-banner-inner { padding: 16px 20px; }
+}
+
+/* ══════════════════════════════════════
    LEVELS GRID
 ══════════════════════════════════════ */
 .levels-grid {
@@ -497,6 +533,17 @@ header {
     من المبتدئ إلى المحترف — كل مستوى مصمم خصيصاً بكلمات Oxford المعتمدة.
     استمع، اكتب، وتقدّم خطوة بخطوة.
   </p>
+</div>
+
+<!-- ── GRAMMAR BANNER ── -->
+<div class="grammar-banner">
+  <div class="grammar-banner-inner">
+    <div class="grammar-banner-text">
+      <div class="grammar-banner-title">📖 تعلّم القواعد بشكل تفاعلي</div>
+      <div class="grammar-banner-sub">32 قاعدة · Fill Blank · Error Hunt · ترجمة · A1 ← C1</div>
+    </div>
+    <a class="grammar-banner-btn" href="Grammar.html">ابدأ القواعد →</a>
+  </div>
 </div>
 
 <!-- ── SECTION LABEL ── -->
