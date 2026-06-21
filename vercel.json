@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/ListenWrite.html" },
+    { "source": "/", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }
