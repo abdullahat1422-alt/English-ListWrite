@@ -405,18 +405,20 @@ function checkAnswer(){
     showFeedback(correct, item.a, val);
 
     if(!correct){
-      // record first-attempt miss for dots, then allow retry
-      if(!window._scored) { window._scored=true; sessionScore.push(false); updateScoreDots(); }
-      // shake + clear after 1.2s so they can try again
+      // record first-attempt miss for dots
+      if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
+      // after 1.2s: clear input but KEEP correct answer visible, prompt to retype
       setTimeout(()=>{
         inp.value = '';
         inp.classList.remove('wrong');
         const fb = document.getElementById('feedback-box');
-        if(fb) fb.className = 'feedback-box';
+        if(fb){
+          fb.className = 'feedback-box wrong';
+          fb.innerHTML = '✏️ الجواب الصحيح: <strong>' + item.a + '</strong> — اكتبه الآن';
+        }
         inp.focus();
-        window._scored = true; // keep miss recorded
       }, 1200);
-      return; // don't lock question — allow retry
+      return;
     }
 
   } else if(currentMode === 'error'){
@@ -436,11 +438,14 @@ function checkAnswer(){
 
     if(!correct){
       if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
-      // reset word selection after 1.2s
+      // reset selection after 1.2s but keep correct answer visible
       setTimeout(()=>{
         document.querySelectorAll('.word-btn').forEach(b=>b.classList.remove('selected','wrong-pick'));
         const fb = document.getElementById('feedback-box');
-        if(fb) fb.className = 'feedback-box';
+        if(fb){
+          fb.className = 'feedback-box wrong';
+          fb.innerHTML = '✏️ الكلمة الصحيحة: <strong>' + item.a + '</strong> — اضغط الكلمة الخاطئة';
+        }
         window._huntSelected = -1;
       }, 1200);
       return;
