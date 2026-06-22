@@ -6829,7 +6829,7 @@ function tapAnsWord(i){
 function showHint(){
   const item = getItems()[exIndex];
   const el = document.getElementById('hint-text');
-  if(el) el.textContent = '💡 ' + item.h;
+  if(el) el.textContent = '💡 ' + (item.h || item.a);
 }
 
 function normalize(s){ return s.trim().toLowerCase().replace(/[.,!?''"]/g,'').replace(/\s+/g,' ') }
@@ -6871,17 +6871,13 @@ function checkAnswer(){
     const accepted = item.a.split('/').map(a=>normalize(a));
     correct = accepted.includes(normalize(built));
 
-    // Style answer tiles
     document.querySelectorAll('.ans-tile').forEach(t=>t.classList.add(correct?'correct-tile':'wrong-tile'));
-    // Disable pool
     document.querySelectorAll('.pool-tile,.ans-tile').forEach(t=>{t.onclick=null;});
     showFeedback(correct, item.a, built);
 
     if(!correct){
       if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
-      // After 1.5s: reset tiles so user retries
       setTimeout(()=>{
-        // Return all answer tiles to pool
         window._tp.forEach(p=>p.used=false);
         window._ta = [];
         refreshTransUI();
@@ -6908,7 +6904,6 @@ function checkAnswer(){
 
     if(!correct){
       if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
-      // reset selection after 1.2s but keep correct answer visible
       setTimeout(()=>{
         document.querySelectorAll('.word-btn').forEach(b=>b.classList.remove('selected','wrong-pick'));
         const fb = document.getElementById('feedback-box');
@@ -6964,7 +6959,6 @@ function renderComplete(){
     ruleState(currentRule.id)[currentMode] = pct;
     save();
   }
-  // Mark rule done if all 3 modes >= 60%
   const rs = ruleState(currentRule.id);
   if((rs.fill||0)>=60 && (rs.quick||0)>=60 && (rs.trans||0)>=60) rs.done = true;
   save();
