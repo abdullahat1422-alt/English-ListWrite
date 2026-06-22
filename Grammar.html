@@ -6767,14 +6767,15 @@ function renderComplete(){
   const ok = sessionScore.filter(Boolean).length;
   const pct = total ? Math.round(ok/total*100) : 0;
   const circ = 2*Math.PI*36;
-  const offset = circ - (circ * pct/100);
-
-  // mark done if >60%
+  const offset = circ - (pct/100)*circ;
   if(pct >= 60){
-    ruleState(currentRule.id).done = true;
     ruleState(currentRule.id)[currentMode] = pct;
     save();
   }
+  // Mark rule done if all 3 modes >= 60%
+  const rs = ruleState(currentRule.id);
+  if((rs.fill||0)>=60 && (rs.error||0)>=60 && (rs.trans||0)>=60) rs.done = true;
+  save();
 
   const area = document.getElementById('exercise-area');
   area.innerHTML = `
@@ -6782,7 +6783,10 @@ function renderComplete(){
       <div class="score-ring">
         <svg viewBox="0 0 80 80" width="90" height="90">
           <circle class="ring-bg" cx="40" cy="40" r="36"/>
-          <circle class="ring-fill" cx="40" cy="40" r="36" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke="${pct>=60?'var(--success)':'var(--warning)'}"/>
+          <circle class="ring-fill" cx="40" cy="40" r="36"
+            stroke-dasharray="${circ.toFixed(1)}"
+            stroke-dashoffset="${offset.toFixed(1)}"
+            stroke="${pct>=60?'var(--success)':'var(--warning)'}"/>
         </svg>
         <div class="score-pct" style="color:${pct>=60?'var(--success)':'var(--warning)'}">${pct}%</div>
       </div>
@@ -6791,4 +6795,35 @@ function renderComplete(){
       <div class="complete-sub">${ok} / ${total} correct · ${pct>=60?'Rule marked complete ✓':pct+'% – try again for 60%+'}</div>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="restartMode()">🔄 Retry</button>
-        <button class="btn btn-primary" onclick="showHome()">← Back 
+        <button class="btn btn-primary" onclick="showHome()">← Back to Levels</button>
+      </div>
+    </div>`;
+}
+
+function restartMode(){
+  exIndex = 0; sessionScore = [];
+  renderEx();
+}
+
+// ── SOUND ──
+let _ac = null;
+function _getAC(){ if(!_ac) _ac = new (window.AudioContext||window.webkitAudioContext)(); if(_ac.state==='suspended') _ac.resume(); return _ac; }
+function _beep(freq, dur, type='sine', vol=0.18, delay=0){
+  try{
+    const ac=_getAC(); const o=ac.createOscillator(); const g=ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type=type; o.frequency.value=freq;
+    const t=ac.currentTime+delay;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.start(t); o.stop(t+dur+0.01);
+  }catch(e){}
+}
+function playCorrectSound(){ _beep(523,0.12,'sine',0.2); _beep(659,0.18,'sine',0.18,0.12); }
+function playWrongSound()  { _beep(220,0.22,'sawtooth',0.12); }
+
+// ── INIT ──
+buildHome();
+</script>
+</body>
+</html>
