@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 600">
+
+  <!-- Icon rounded square -->
+  <rect x="30" y="70" width="460" height="460" rx="82" fill="#2b2118"/>
+
+  <!-- Icon contents centered at (260,300) -->
+  <g transform="translate(260,300)">
+
+    <!-- Open book (bottom layer) -->
+    <path d="M0,118 Q-56,100 -115,125 Q-60,140 0,142 Z" fill="white" opacity="0.93"/>
+    <path d="M0,118 Q56,100  115,125 Q60,140  0,142 Z"  fill="white" opacity="0.93"/>
+    <line x1="0" y1="117" x2="0" y2="143" stroke="#c8a050" stroke-width="4"/>
+
+    <!-- Pencil diagonal -->
+    <g transform="rotate(-30)">
+      <rect x="-9" y="18"  width="18" height="84" rx="3" fill="white"/>
+      <rect x="-9" y="12"  width="18" height="9"  fill="#9a7838"/>
+      <rect x="-9" y="4"   width="18" height="11" rx="3" fill="#c8a050"/>
+      <polygon points="-9,102 9,102 0,126" fill="#c8a050"/>
+    </g>
+
+    <!-- Headphone ear cups -->
+    <rect x="-128" y="-24" width="42" height="66" rx="19" fill="#c8a050"/>
+    <rect x="86"   y="-24" width="42" height="66" rx="19" fill="#c8a050"/>
+
+    <!-- Headband: sweep=1 = arch going UPWARD (∩ shape) -->
+    <path d="M-106,-16 A106,106 0 0,1 106,-16"
+      fill="none" stroke="#c8a050" stroke-width="17" stroke-linecap="round"/>
+
+    <!-- Wifi signal: 3 arcs above headband, sweep=1 = upward arches -->
+    <path d="M-74,-90  A96,96  0 0,1 74,-90"  fill="none" stroke="white" stroke-width="15" stroke-linecap="round"/>
+    <path d="M-50,-118 A64,64  0 0,1 50,-118" fill="none" stroke="white" stroke-width="15" stroke-linecap="round"/>
+    <path d="M-26,-146 A32,32  0 0,1 26,-146" fill="none" stroke="white" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="0" cy="-162" r="9" fill="white"/>
+  </g>
+
+  <!-- "English ListWrite" -->
+  <text x="540" y="312"
+    font-family="'Playfair Display',Georgia,'Times New Roman',serif"
+    font-size="170" font-weight="700" fill="#2b2118" letter-spacing="-2">English ListWrite</text>
+
+  <!-- Subtitle row: line — Arabic — line -->
+  <line x1="540" y1="408" x2="700" y2="408" stroke="#c8a050" stroke-width="2.2"/>
+  <text x="1470" y="418"
+    font-family="'Amiri','Traditional Arabic',serif"
+    font-size="52" fill="#c8a050" text-anchor="middle"
+    direction="rtl" unicode-bidi="embed">تعلم الإنجليزية بالكتابة والاستماع</text>
+  <line x1="2240" y1="408" x2="2400" y2="408" stroke="#c8a050" stroke-width="2.2"/>
+
+</svg>
