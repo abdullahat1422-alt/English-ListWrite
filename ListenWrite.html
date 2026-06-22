@@ -1022,11 +1022,11 @@ function getTopicProg(lv, tp) {
   return (_progressCache[lv] && _progressCache[lv][tp]) || { done: 0, correct: 0, attempts: 0, lastFrom: 0 };
 }
 
-function saveLastPosition(lv, tp, batchFrom) {
+async function saveLastPosition(lv, tp, batchFrom) {
   const cur = getTopicProg(lv, tp);
   if (!_progressCache[lv]) _progressCache[lv] = {};
   _progressCache[lv][tp] = { ...cur, lastFrom: batchFrom };
-  upsertProgress(lv, tp, _progressCache[lv][tp]);
+  await upsertProgress(lv, tp, _progressCache[lv][tp]);
 }
 
 function markTopicProgress(lv, tp, batchCorrect, batchAttempts) {
@@ -1095,12 +1095,19 @@ document.documentElement.style.setProperty('--accent-tint', col.tint);
 document.documentElement.style.setProperty('--accent-deep', col.deep);
 
 document.getElementById('level-badge').textContent = level;
-// If a topic is active, update back-link to go to topic selector
+// If a topic is active, update back-link to save position before leaving
 if (urlTopic) {
   const backLink = document.querySelector('.back-link');
   if (backLink) {
     backLink.href = `ListenWrite.html?level=${level}`;
     backLink.textContent = `← ${decodeURIComponent(urlTopic)}`;
+    backLink.addEventListener('click', (e) => {
+      // Only intercept during active practice (card visible), not on results screen
+      if (document.getElementById('card')) {
+        e.preventDefault();
+        goBack();
+      }
+    });
   }
 }
 
@@ -1514,9 +1521,11 @@ function _doSpeak(text, rate) {
 // ══════════════════════════════════════
 //  BACK / SAVE POSITION
 // ══════════════════════════════════════
-function goBack() {
-  // Save current batch position before leaving
-  if (urlTopic) saveLastPosition(level, urlTopic, urlFrom);
+async function goBack() {
+  // If current word was just answered correctly (locked=true, animation in progress),
+  // save the NEXT word position; otherwise save the current word position
+  const savePos = urlFrom + idx + (locked ? 1 : 0);
+  if (urlTopic) await saveLastPosition(level, urlTopic, savePos);
   window.speechSynthesis.cancel();
   window.location.href = `ListenWrite.html?level=${level}`;
 }
@@ -1774,6 +1783,13 @@ function setStatus(type, msg) {
 function showDone() {
   document.getElementById('progress-fill').style.width = '100%';
   document.getElementById('counter').textContent = '';
+
+  // On results screen, top-left back button returns to home
+  const backLink = document.querySelector('.back-link');
+  if (backLink) {
+    backLink.href = 'index.html';
+    backLink.textContent = '← الرئيسية';
+  }
 
   // Save progress to localStorage
   if (urlTopic) markTopicProgress(level, urlTopic, sessionCorrect, words.length);
