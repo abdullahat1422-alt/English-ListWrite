@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ListWrite">
+<meta name="theme-color" content="#5b8c74">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>ListenWrite — اكتب ما تسمع</title>
 <script src="words_db.js"></script>
 <script src="words_extra.js"></script>
@@ -683,6 +689,42 @@ button, a, .topic-card, .word-btn {
   .audio-controls { gap: 4px; }
   .speaker-btn { width: 34px; height: 34px; }
   .slow-btn, .sentence-btn, .accent-btn { width: 28px; height: 28px; }
+}
+
+/* ── iOS / iPadOS Safe-Area & PWA Enhancements ── */
+/* Use dvh so Safari's dynamic toolbar doesn't clip the layout */
+body {
+  min-height: 100dvh;
+  /* Safe area padding for iPhone notch / Dynamic Island */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Don't double-add bottom padding during practice — card is centered */
+body.practice-mode {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+/* Prevent elastic/bounce scroll during practice (iOS Safari) */
+body.practice-mode {
+  overscroll-behavior: none;
+}
+/* Prevent accidental text selection while tapping cards & buttons */
+.card, .arabic-section, .sentence-wrap, .done-card, .topic-card {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* But always allow selecting/pasting into the answer input */
+.word-input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* Smooth momentum scroll on topic list */
+.topic-selector-wrap {
+  -webkit-overflow-scrolling: touch;
+}
+/* Bottom nav bar safe area on topic selector */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .topic-selector-wrap {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+  }
 }
 
 /* ══════════════════════════════════════
@@ -2033,6 +2075,94 @@ sb.auth.onAuthStateChange((event) => {
     window.location.replace('index.html');
   }
 });
+
+// ══════════════════════════════════════════════════════════════════
+//  iOS / iPadOS Enhancements
+// ══════════════════════════════════════════════════════════════════
+
+// ── 1. Register Service Worker (offline + PWA installability) ────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// ── 2. visualViewport: keep card visible when iOS keyboard opens ──
+// iOS Safari resizes the viewport when the keyboard opens, which can
+// push the input and card off-screen if the body is too tall.
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const inputEl = document.getElementById('word-input');
+    if (inputEl && document.activeElement === inputEl) {
+      // Wait one frame so layout has stabilised, then scroll input
+      // to the centre of the visible area
+      requestAnimationFrame(() => {
+        inputEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    }
+  });
+}
+
+// ── 3. Swipe right → go back (during active practice) ────────────
+// A finger swipe of ≥72px to the right with minimal vertical drift
+// triggers the same goBack() as the back button.
+{
+  let _x0 = 0, _y0 = 0;
+  document.addEventListener('touchstart', (e) => {
+    _x0 = e.touches[0].clientX;
+    _y0 = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    // Only active during practice (card is in DOM) and when a topic exists
+    if (!urlTopic || !document.getElementById('card')) return;
+    const dx = e.changedTouches[0].clientX - _x0;
+    const dy = Math.abs(e.changedTouches[0].clientY - _y0);
+    // Swipe right ≥ 72px, vertical drift < 40px → go back
+    if (dx > 72 && dy < 40) goBack();
+  }, { passive: true });
+}
+
+// ── 4. iOS TTS unlock on first user interaction ───────────────────
+// iOS Safari silently drops speechSynthesis.speak() until the user
+// has interacted with the page. Firing a silent utterance on first
+// touch "unlocks" the audio session so subsequent calls work.
+document.addEventListener('touchstart', function _iosAudioUnlock() {
+  // Unlock Web Audio API if it was suspended (iOS autoplay policy)
+  if (typeof _audioCtx !== 'undefined' && _audioCtx && _audioCtx.state === 'suspended') {
+    _audioCtx.resume().catch(() => {});
+  }
+  // Warm up speechSynthesis with a zero-length utterance
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    try { window.speechSynthesis.speak(u); } catch (_) {}
+  }
+  document.removeEventListener('touchstart', _iosAudioUnlock);
+}, { once: true, passive: true });
+
+// ── 5. Set inputmode on the answer input for better iOS keyboard ──
+// "text" gives the standard keyboard; adding autocorrect="off" and
+// spellcheck="false" prevents iOS from autocorrecting English words.
+// (renderCard() builds the input each time, so we patch it lazily.)
+const _origRenderCard = typeof renderCard === 'function' ? renderCard : null;
+// Patch via MutationObserver: whenever the card is (re)inserted,
+// tweak the input element attributes for iOS.
+{
+  const _cardObserver = new MutationObserver(() => {
+    const inp = document.getElementById('word-input');
+    if (inp && !inp.dataset.iosPatch) {
+      inp.setAttribute('inputmode', 'text');
+      inp.setAttribute('autocorrect', 'off');
+      inp.setAttribute('autocapitalize', 'off');
+      inp.setAttribute('spellcheck', 'false');
+      // Ensure font-size is ≥ 16px so iOS doesn't auto-zoom
+      inp.style.fontSize = inp.style.fontSize || '1rem';
+      inp.dataset.iosPatch = '1';
+    }
+  });
+  _cardObserver.observe(document.body, { childList: true, subtree: true });
+}
 </script>
 </body>
 </html>
