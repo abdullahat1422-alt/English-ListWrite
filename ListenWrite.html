@@ -1806,7 +1806,7 @@ function checkAnswer() {
     document.getElementById('correct-word-hint').classList.add('hidden');
     setStatus('success', '✓ ممتاز!');
 
-    setTimeout(() => advance(), 950);
+    setTimeout(() => advance(), 1200);
 
   } else {
     // ✗ Wrong
@@ -2136,8 +2136,13 @@ if (window.visualViewport) {
 // has interacted with the page. Firing a silent utterance on first
 // touch "unlocks" the audio session so subsequent calls work.
 document.addEventListener('touchstart', function _iosAudioUnlock() {
-  // Unlock Web Audio API if it was suspended (iOS autoplay policy)
-  if (typeof _audioCtx !== 'undefined' && _audioCtx && _audioCtx.state === 'suspended') {
+  // Create and immediately resume AudioContext on the first user touch.
+  // iOS only allows AudioContext to start from a direct gesture — doing it
+  // here ensures it's already running before any auto-submit via `input` event.
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (_audioCtx.state === 'suspended') {
     _audioCtx.resume().catch(() => {});
   }
   // Warm up speechSynthesis with a zero-length utterance
