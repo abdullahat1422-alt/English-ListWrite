@@ -145,6 +145,32 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .word-btn.selected{background:var(--warning-tint);border-bottom:2px solid var(--warning)}
 .word-btn.correct-pick{background:var(--success-tint);border-bottom:2px solid var(--success)}
 .word-btn.wrong-pick{background:var(--error-tint);border-bottom:2px solid var(--error)}
+/* word-drag (trans mode) */
+.answer-zone{min-height:54px;border:2px dashed var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;background:var(--bg);transition:border-color .2s,background .2s}
+.answer-zone.has-words{border-color:var(--accent);border-style:solid;background:var(--surface)}
+.ans-placeholder{color:var(--text-3);font-size:.88rem;font-style:italic;width:100%;text-align:center}
+.word-pool{display:flex;flex-wrap:wrap;gap:8px;padding:14px 12px;background:var(--bg-2);border-radius:var(--r-md);margin-bottom:14px;min-height:54px;align-items:center}
+.word-tile{display:inline-flex;align-items:center;padding:7px 14px;border-radius:var(--r-full);font-family:inherit;font-size:.92rem;font-weight:500;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .12s,background .12s,opacity .15s,width .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.pool-tile{background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);box-shadow:var(--shadow-xs)}
+.pool-tile:not(.used):hover{background:var(--accent-tint);border-color:var(--accent);transform:translateY(-2px)}
+.pool-tile:not(.used):active{transform:scale(.93)}
+.pool-tile.used{opacity:0;pointer-events:none;width:0;padding:0;margin:0;border:none;min-width:0}
+.ans-tile{background:var(--accent);color:#fff;border:1.5px solid var(--accent-deep);box-shadow:0 2px 6px rgba(58,122,184,.25)}
+.ans-tile:hover{opacity:.88;transform:translateY(-1px)}
+.ans-tile:active{transform:scale(.93)}
+.ans-tile.correct-tile{background:var(--success)!important;box-shadow:none}
+.ans-tile.wrong-tile{background:var(--error)!important;box-shadow:none}
+/* quick pick */
+.quick-pick-wrap{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.quick-card{display:flex;align-items:flex-start;gap:14px;width:100%;padding:16px 18px;border-radius:var(--r-lg);border:2px solid var(--border);background:var(--surface);cursor:pointer;text-align:left;font-family:inherit;font-size:1rem;line-height:1.6;color:var(--text);transition:border-color .15s,background .15s,transform .1s}
+.quick-card:hover:not(:disabled){border-color:var(--accent);background:var(--accent-tint);transform:translateY(-1px)}
+.quick-card:active:not(:disabled){transform:scale(.98)}
+.quick-card:disabled{cursor:default}
+.quick-card.qcard-correct{border-color:var(--success);background:var(--success-tint);color:#1d6645}
+.quick-card.qcard-wrong{border-color:var(--error);background:var(--error-tint);color:#8c2020;opacity:.75}
+.qcard-letter{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--accent-tint);color:var(--accent-deep);font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.quick-card.qcard-correct .qcard-letter{background:var(--success-tint);color:#1d6645}
+.quick-card.qcard-wrong .qcard-letter{background:var(--error-tint);color:#8c2020}
 /* complete screen */
 .complete-card{background:var(--surface);border-radius:var(--r-xl);padding:36px 28px;text-align:center;box-shadow:var(--shadow-md);animation:pop .4s var(--ease-spring) both}
 .complete-icon{font-size:3rem;margin-bottom:14px}
@@ -161,7 +187,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .progress-toast.visible{display:block}
 
 /* ── Touch ── */
-button,a,.rule-chip,.word-btn,.level-card{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,a,.rule-chip,.word-btn,.level-card,.quick-card{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 
 /* ── MOBILE ── */
 @media (max-width:600px){
@@ -191,6 +217,9 @@ button,a,.rule-chip,.word-btn,.level-card{touch-action:manipulation;-webkit-tap-
 
   .sentence-hunt{font-size:.95rem;line-height:1.8;padding:12px 14px}
   .word-btn{padding:3px 4px}
+  .word-tile{font-size:.86rem;padding:7px 11px}
+  .word-pool{padding:12px 10px;gap:7px}
+  .answer-zone{min-height:48px;gap:6px}
 
   .ex-nav{gap:8px}
   .btn{padding:10px 16px;font-size:.82rem}
@@ -260,8 +289,8 @@ button,a,.rule-chip,.word-btn,.level-card{touch-action:manipulation;-webkit-tap-
       <div class="section-label">Practice</div>
       <div class="mode-tabs">
         <div class="mode-tab active" onclick="setMode('fill',this)">✏️ Fill Blank</div>
-        <div class="mode-tab" onclick="setMode('error',this)">🔍 Error Hunt</div>
-        <div class="mode-tab" onclick="setMode('trans',this)">🌐 Translate</div>
+        <div class="mode-tab" onclick="setMode('quick',this)">⚡ Quick Pick</div>
+        <div class="mode-tab" onclick="setMode('trans',this)">🔤 Word Order</div>
       </div>
       <div class="ex-score" id="ex-score"></div>
       <div class="exercise-area" id="exercise-area"></div>
@@ -6509,7 +6538,7 @@ let currentRule = null, currentMode = 'fill', exIndex = 0, exAnswered = false, s
 
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 function getRule(id){ return GRAMMAR.find(r=>r.id===id) }
-function ruleState(id){ if(!state[id]) state[id]={fill:0,error:0,trans:0,done:false}; return state[id] }
+function ruleState(id){ if(!state[id]) state[id]={fill:0,quick:0,trans:0,done:false}; return state[id] }
 
 const LEVEL_META = {
   A1:{label:'A1 — Beginner',ar:'مبتدئ',desc:'Articles, verb to be, present simple…',arDesc:'المقالات، فعل to be، المضارع البسيط…',color:'#2a7a55'},
@@ -6597,7 +6626,7 @@ function setMode(m, el){
   renderEx();
 }
 
-function getItems(){ return currentRule[currentMode] || [] }
+function getItems(){ return currentRule[currentMode === 'quick' ? 'error' : currentMode] || [] }
 
 function renderEx(){
   const items = getItems();
@@ -6611,8 +6640,9 @@ function renderEx(){
 
   if(currentMode === 'fill'){
     renderFill(item, area);
-  } else if(currentMode === 'error'){
-    renderError(item, area);
+  } else if(currentMode === 'quick'){
+    renderQuick(item, area);
+    return; // quick pick has its own nav/check logic
   } else {
     renderTrans(item, area);
   }
@@ -6654,15 +6684,146 @@ function selectWord(el, idx){
   window._huntSelected = idx;
 }
 
-function renderTrans(item, area){
+function buildCorrectSentence(q, a) {
+  const trailing = q.match(/[.!?]$/)?.[0] || '';
+  const qWords = q.replace(/[.!?]$/, '').split(' ');
+  const aWords = a.split(' ');
+  const n = aWords.length;
+  let bestPos = 0, bestScore = -1;
+  for (let i = 0; i <= qWords.length - n; i++) {
+    let score = 0;
+    for (let j = 0; j < n; j++) {
+      const qw = qWords[i+j].toLowerCase().replace(/[.,!?'"]/g,'');
+      const aw = aWords[j].toLowerCase().replace(/[.,!?'"]/g,'');
+      if (qw === aw) score++;
+    }
+    if (score > bestScore) { bestScore = score; bestPos = i; }
+  }
+  const result = [...qWords];
+  result.splice(bestPos, n, ...aWords);
+  return result.join(' ') + trailing;
+}
+
+function renderQuick(item, area){
+  const wrongSentence = item.q;
+  const correctSentence = buildCorrectSentence(item.q, item.a);
+  // Randomly assign which card is first
+  const flip = Math.random() < 0.5;
+  const cardA = flip ? correctSentence : wrongSentence;
+  const cardB = flip ? wrongSentence : correctSentence;
+  const correctIsA = flip;
+
   area.innerHTML = `
-    <div class="section-label" style="margin-bottom:8px">Translate this Arabic sentence to English:</div>
+    <div class="section-label" style="margin-bottom:12px">Which sentence is grammatically correct?</div>
+    <div class="quick-pick-wrap" id="quick-wrap">
+      <button class="quick-card" id="qcard-a" onclick="pickQuick(this,'a')" data-correct="${correctIsA}">
+        <span class="qcard-letter">A</span>
+        <span class="qcard-text">${cardA}</span>
+      </button>
+      <button class="quick-card" id="qcard-b" onclick="pickQuick(this,'b')" data-correct="${!correctIsA}">
+        <span class="qcard-letter">B</span>
+        <span class="qcard-text">${cardB}</span>
+      </button>
+    </div>
+    <div class="hint-text" id="hint-text"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="ex-nav">
+      <span class="ex-counter">${exIndex+1} / ${getItems().length}</span>
+      <button class="btn btn-ghost" id="btn-hint" onclick="showHint()">💡 Hint</button>
+    </div>
+  `;
+}
+
+function pickQuick(el, which){
+  if(exAnswered) return;
+  const correct = el.dataset.correct === 'true';
+  exAnswered = true;
+
+  // Style both cards
+  document.querySelectorAll('.quick-card').forEach(c=>{
+    const isCorrect = c.dataset.correct === 'true';
+    c.classList.add(isCorrect ? 'qcard-correct' : 'qcard-wrong');
+    c.disabled = true;
+  });
+
+  if(correct){
+    playCorrectSound();
+    const fb = document.getElementById('feedback-box');
+    if(fb){ fb.className='feedback-box correct'; fb.textContent='✓ Correct! Well done.'; }
+    if(!window._scored){ sessionScore.push(true); }
+  } else {
+    playWrongSound();
+    const item = getItems()[exIndex];
+    const fb = document.getElementById('feedback-box');
+    if(fb){ fb.className='feedback-box wrong'; fb.innerHTML=`✗ Not quite.<br>Correction: <strong>${item.a}</strong>`; }
+    if(!window._scored){ window._scored=true; sessionScore.push(false); }
+  }
+  window._scored = false;
+  updateScoreDots();
+  setTimeout(()=>nextEx(), 1200);
+}
+
+function renderTrans(item, area){
+  // Strip trailing punctuation — keep for answer comparison
+  const raw = item.a;
+  const trailing = raw.match(/[.!?]$/)?.[0] || '';
+  const words = raw.replace(/[.!?]$/, '').split(' ');
+
+  // Fisher-Yates shuffle into pool
+  const order = words.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+
+  // Global trans state
+  window._tw = words;          // correct words in correct order
+  window._ttr = trailing;      // trailing punctuation
+  window._tp = order.map((origIdx,poolIdx)=>({w:words[origIdx],origIdx,poolIdx,used:false}));
+  window._ta = [];              // answer stack
+
+  area.innerHTML = `
+    <div class="section-label" style="margin-bottom:8px">رتّب الكلمات لتكوين الجملة الصحيحة:</div>
     <div class="ex-ar">${item.ar}</div>
-    <input class="ex-input" id="ex-ans" placeholder="Type in English..." autocomplete="off" onkeydown="if(event.key==='Enter')checkAnswer()">
+    <div class="answer-zone" id="trans-ans"><span class="ans-placeholder">اضغط الكلمات أدناه لترتيبها</span></div>
+    <div class="word-pool" id="trans-pool"></div>
     <div class="hint-text" id="hint-text"></div>
     <div class="feedback-box" id="feedback-box"></div>
   `;
-  setTimeout(()=>document.getElementById('ex-ans')?.focus(),50);
+  refreshTransUI();
+}
+
+function refreshTransUI(){
+  const ans = window._ta;
+  const pool = window._tp;
+  const az = document.getElementById('trans-ans');
+  const wp = document.getElementById('trans-pool');
+  if(!az||!wp) return;
+
+  if(ans.length){
+    az.className = 'answer-zone has-words';
+    az.innerHTML = ans.map((p,i)=>`<span class="word-tile ans-tile" onclick="tapAnsWord(${i})">${p.w}</span>`).join('');
+  } else {
+    az.className = 'answer-zone';
+    az.innerHTML = '<span class="ans-placeholder">اضغط الكلمات أدناه لترتيبها</span>';
+  }
+
+  wp.innerHTML = pool.map((p,i)=>
+    p.used
+      ? `<span class="word-tile pool-tile used"></span>`
+      : `<span class="word-tile pool-tile" onclick="tapPoolWord(${i})">${p.w}</span>`
+  ).join('');
+}
+
+function tapPoolWord(i){
+  if(exAnswered) return;
+  window._tp[i].used = true;
+  window._ta.push(window._tp[i]);
+  refreshTransUI();
+}
+
+function tapAnsWord(i){
+  if(exAnswered) return;
+  const p = window._ta.splice(i,1)[0];
+  window._tp[p.poolIdx].used = false;
+  refreshTransUI();
 }
 
 function showHint(){
@@ -6678,7 +6839,7 @@ function checkAnswer(){
   const item = getItems()[exIndex];
   let correct = false;
 
-  if(currentMode === 'fill' || currentMode === 'trans'){
+  if(currentMode === 'fill'){
     const inp = document.getElementById('ex-ans');
     if(!inp) return;
     const val = inp.value.trim();
@@ -6689,9 +6850,7 @@ function checkAnswer(){
     showFeedback(correct, item.a, val);
 
     if(!correct){
-      // record first-attempt miss for dots
       if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
-      // after 1.2s: clear input but KEEP correct answer visible, prompt to retype
       setTimeout(()=>{
         inp.value = '';
         inp.classList.remove('wrong');
@@ -6702,6 +6861,33 @@ function checkAnswer(){
         }
         inp.focus();
       }, 1200);
+      return;
+    }
+
+  } else if(currentMode === 'trans'){
+    const ans = window._ta || [];
+    if(!ans.length){ document.getElementById('hint-text').textContent = 'اضغط على الكلمات لترتيبها أولاً.'; return; }
+    const built = ans.map(p=>p.w).join(' ') + (window._ttr||'');
+    const accepted = item.a.split('/').map(a=>normalize(a));
+    correct = accepted.includes(normalize(built));
+
+    // Style answer tiles
+    document.querySelectorAll('.ans-tile').forEach(t=>t.classList.add(correct?'correct-tile':'wrong-tile'));
+    // Disable pool
+    document.querySelectorAll('.pool-tile,.ans-tile').forEach(t=>{t.onclick=null;});
+    showFeedback(correct, item.a, built);
+
+    if(!correct){
+      if(!window._scored){ window._scored=true; sessionScore.push(false); updateScoreDots(); }
+      // After 1.5s: reset tiles so user retries
+      setTimeout(()=>{
+        // Return all answer tiles to pool
+        window._tp.forEach(p=>p.used=false);
+        window._ta = [];
+        refreshTransUI();
+        const fb = document.getElementById('feedback-box');
+        if(fb){ fb.className='feedback-box wrong'; fb.innerHTML='الترتيب الصحيح: <strong>'+item.a+'</strong>'; }
+      }, 1500);
       return;
     }
 
@@ -6780,7 +6966,7 @@ function renderComplete(){
   }
   // Mark rule done if all 3 modes >= 60%
   const rs = ruleState(currentRule.id);
-  if((rs.fill||0)>=60 && (rs.error||0)>=60 && (rs.trans||0)>=60) rs.done = true;
+  if((rs.fill||0)>=60 && (rs.quick||0)>=60 && (rs.trans||0)>=60) rs.done = true;
   save();
 
   const area = document.getElementById('exercise-area');
