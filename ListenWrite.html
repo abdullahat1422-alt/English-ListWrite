@@ -1683,7 +1683,7 @@ const CARD_HTML = `
     <div class="english-section">
       <div class="sentence-wrap" id="sentence-wrap"></div>
       <div class="correct-word-hint hidden" id="correct-word-hint"></div>
-      <div class="status hint-msg" id="status">اضغط Enter للتحقق</div>
+      <div class="status hint-msg" id="status">اكتب الكلمة للتحقق</div>
     </div>
   </div>
 `;
@@ -1736,6 +1736,14 @@ function renderCard(animate) {
   inputEl.addEventListener('keydown', e => {
     if (e.key === 'Enter') checkAnswer();
   });
+  // Auto-submit on mobile: check the answer the moment it exactly matches
+  // the correct word (no need to press Enter/Return on touch keyboards).
+  inputEl.addEventListener('input', () => {
+    if (locked || !inputEl) return;
+    const typed   = inputEl.value.trim().toLowerCase();
+    const correct = words[idx].english.toLowerCase();
+    if (typed === correct) checkAnswer();
+  });
   // Re-focus immediately if input loses focus (keeps typing always ready)
   inputEl.addEventListener('blur', () => {
     if (!locked) setTimeout(() => inputEl && inputEl.focus(), 0);
@@ -1753,7 +1761,7 @@ function renderCard(animate) {
   const hint = document.getElementById('correct-word-hint');
   hint.classList.add('hidden');
   hint.innerHTML = '';
-  setStatus('hint', 'اضغط Enter للتحقق');
+  setStatus('hint', 'اكتب الكلمة للتحقق');
 
   // Progress
   const pct = (idx / words.length) * 100;
@@ -1827,7 +1835,7 @@ function checkAnswer() {
       inputEl.value = '';
       inputEl.classList.remove('wrong');
       inputEl.focus();
-      if (wrongAttempts < 3) setStatus('hint', 'اضغط Enter للتحقق');
+      if (wrongAttempts < 3) setStatus('hint', 'اكتب الكلمة للتحقق');
     }, 1000);
   }
 }
