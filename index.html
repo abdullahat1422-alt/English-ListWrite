@@ -467,14 +467,29 @@ header {
   header, .hero, .levels-grid, .section-divider {
     padding-right: 20px; padding-left: 20px;
   }
-  .levels-grid { grid-template-columns: 1fr; }
+  header { padding-top: 24px; }
+  .logo-row { margin-bottom: 28px; }
+  .hero { padding-bottom: 36px; }
+  .levels-grid { grid-template-columns: 1fr; padding-bottom: 48px; }
   .level-card:last-child { grid-column: 1; }
   .card-c1 .card-header { display: block; }
   .card-c1 .level-badge { margin-bottom: 20px; }
   .card-c1 .card-body { display: block; }
   .card-c1 .card-footer { margin-top: 24px; flex-direction: row; }
-  .level-card { padding: 28px 24px 0; border-radius: 18px; }
+  .level-card { padding: 24px 20px 0; border-radius: 18px; }
   .topics-list { grid-template-columns: 1fr; }
+  .login-card { padding: 36px 24px; }
+  /* touch targets */
+  .topic-item { padding: 12px 10px; }
+  .toggle-btn { padding: 11px 18px; }
+}
+
+@media (max-width: 400px) {
+  .logo-text { font-size: 1.05rem; }
+  .logo-sub  { font-size: 0.8rem; }
+  .hero-title { font-size: 1.7rem; }
+  .level-ar-name { font-size: 1.3rem; }
+  .grammar-banner-title { font-size: 1rem; }
 }
 </style>
 </head>

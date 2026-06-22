@@ -631,13 +631,58 @@ body.practice-mode {
 .topic-card:nth-child(9)  { animation-delay: 0.36s; }
 .topic-card:nth-child(10) { animation-delay: 0.40s; }
 
+/* ── Touch — eliminate 300ms delay on all interactive elements ── */
+button, a, .topic-card, .word-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
-  .card { padding: 40px 24px 36px; border-radius: 20px; }
-  .sentence-wrap { font-size: 0.96rem; gap: 2px; }
-  .arabic-def { font-size: 1rem; }
+  /* Body — flex-start so card stays visible when keyboard opens */
+  body { padding: 16px 12px; }
+  body.practice-mode { justify-content: flex-start; padding-top: 28px; }
+
+  /* Practice card */
+  .card { padding: 44px 18px 32px; border-radius: 20px; }
+  .arabic-section { margin-bottom: 22px; }
+  .arabic-word { font-size: clamp(1.9rem, 9vw, 2.8rem); }
+  .arabic-def  { font-size: 0.92rem; }
+  .divider { margin-bottom: 22px; }
+  .sentence-wrap { font-size: 0.92rem; gap: 2px; line-height: 2; }
+  .word-input { max-width: calc(100vw - 72px); }
+
+  /* Audio controls — smaller on mobile */
+  .speaker-btn { width: 38px; height: 38px; }
+  .slow-btn, .sentence-btn { width: 30px; height: 30px; }
+  .accent-btn  { width: 30px; height: 30px; font-size: 0.85rem; }
+  .key-hint    { display: none; }    /* hide keyboard hints on mobile */
+
+  /* Counter position */
+  .counter { right: 12px; top: 10px; }
+
+  /* Completion screen */
+  .done-card  { padding: 36px 20px 32px; border-radius: 20px; }
+  .done-title { font-size: 2.1rem; }
+  .done-icon  { width: 60px; height: 60px; font-size: 1.7rem; margin-bottom: 16px; }
+  .btn-restart { padding: 11px 18px; font-size: 0.82rem; }
+
+  /* Topic selector */
+  .topic-selector-wrap { padding-top: 40px; }
   .topic-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .topic-card { padding: 14px 12px 12px; }
+  .topic-card { padding: 12px 10px 10px; }
+  .topic-card-ar { font-size: 0.88rem; }
+  .topic-card-count { font-size: 0.65rem; }
+
+  /* Auth overlay */
+  .auth-card { padding: 36px 20px 32px; border-radius: 20px; }
+}
+
+@media (max-width: 360px) {
+  .topic-grid { grid-template-columns: 1fr; }
+  .audio-controls { gap: 4px; }
+  .speaker-btn { width: 34px; height: 34px; }
+  .slow-btn, .sentence-btn, .accent-btn { width: 28px; height: 28px; }
 }
 
 /* ══════════════════════════════════════
