@@ -512,6 +512,23 @@ header {
       <img src="logo.svg" alt="English ListWrite" style="height:44px;width:auto;margin:0 auto 4px;display:block;">
       <div class="login-title" style="display:none;">English ListWrite</div>
       <div class="login-sub">تعلّم الإنجليزية بالكتابة والاستماع<br>سجّل دخولك لحفظ تقدمك على جميع أجهزتك</div>
+
+      <!-- In-app browser warning (shown instead of Google button) -->
+      <div id="inapp-warning" style="display:none;
+        background:#fff8e6; border:1px solid #f0c040; border-radius:14px;
+        padding:18px 20px; text-align:center; line-height:1.7; font-size:.92rem; color:#5a4200;">
+        <div style="font-size:1.5rem;margin-bottom:8px;">🌐</div>
+        <strong>افتح الرابط في Safari أو Chrome</strong><br>
+        تسجيل الدخول بـ Google لا يعمل داخل تطبيقات مثل Snapchat أو Instagram.<br><br>
+        <button onclick="copyLink()" style="
+          background:#5b8c74;color:#fff;border:none;border-radius:10px;
+          padding:10px 22px;font-size:.9rem;cursor:pointer;font-family:inherit;">
+          نسخ رابط الموقع
+        </button>
+        <div id="copy-confirm" style="display:none;margin-top:8px;color:#3a7a55;font-size:.85rem;">✓ تم النسخ — الصقه في Safari أو Chrome</div>
+      </div>
+
+      <!-- Normal Google sign-in button -->
       <button class="google-btn" id="google-btn" onclick="signInWithGoogle()">
         <svg width="20" height="20" viewBox="0 0 48 48">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -875,6 +892,40 @@ function showLoginForm() {
   overlay.style.display = 'flex';
   loadingEl.style.display = 'none';
   formEl.style.display    = 'block';
+  applyInAppCheck();
+}
+
+// ── In-app browser detection ──
+function isInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return (
+    /Snapchat|Instagram|FBAN|FBAV|FB_IAB|Twitter|TikTok|BytedanceWebview|Line|WhatsApp|Telegram|MicroMessenger|WeChat/.test(ua) ||
+    // Android WebView
+    (/Android/.test(ua) && /wv/.test(ua)) ||
+    // iOS in-app (no Safari, no Chrome, no Firefox)
+    (/iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua) && !/CriOS\//.test(ua) && !/FxiOS\//.test(ua))
+  );
+}
+
+window.copyLink = function () {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('copy-confirm').style.display = 'block';
+  }).catch(() => {
+    // Fallback for older browsers
+    const el = document.createElement('textarea');
+    el.value = url; document.body.appendChild(el);
+    el.select(); document.execCommand('copy'); document.body.removeChild(el);
+    document.getElementById('copy-confirm').style.display = 'block';
+  });
+};
+
+// Apply in-app browser check when login form shows
+function applyInAppCheck() {
+  if (isInAppBrowser()) {
+    document.getElementById('inapp-warning').style.display = 'block';
+    document.getElementById('google-btn').style.display = 'none';
+  }
 }
 
 window.signInWithGoogle = async function () {
@@ -893,7 +944,7 @@ window.sbSignOut = async function () {
   await sb.auth.signOut();
   overlay.style.display = 'flex';
   loadingEl.style.display = 'none';
-  formEl.style.display = 'block';
+  formEl.style.display = 'block'; applyInAppCheck();
   document.getElementById('user-greeting').style.display = 'none';
 };
 
@@ -954,7 +1005,7 @@ sb.auth.onAuthStateChange((event, session) => {
   <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
     <a href="privacy.html" style="font-size:0.8rem;color:var(--text-3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-3)'">سياسة الخصوصية</a>
     <a href="privacy.html#terms" style="font-size:0.8rem;color:var(--text-3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-3)'">شروط الاستخدام</a>
-    <span style="font-size:0.78rem;color:var(--text-3);">© 2025 English ListWrite</span>
+    <span style="font-size:0.78rem;color:var(--text-3);">© 2026 English ListWrite</span>
   </div>
 </footer>
 
