@@ -113,11 +113,23 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .lv-B2 .detail-nav-lvl,.detail-nav-lvl.lv-B2{background:#fdeaea;color:#b03030}
 .lv-C1 .detail-nav-lvl,.detail-nav-lvl.lv-C1{background:#f0e8fb;color:#6030a0}
 .detail-body{max-width:680px;margin:0 auto;padding:28px 20px 100px}
-.rule-hero{background:linear-gradient(135deg,var(--accent-deep),var(--accent));color:#fff;border-radius:var(--r-xl);padding:28px 28px 24px;margin-bottom:24px;animation:fadeUp .4s var(--ease-out) both}
-.rule-icon{font-size:2rem;margin-bottom:10px}
-.rule-title{font-family:var(--font-display);font-size:1.6rem;font-weight:700;line-height:1.2;margin-bottom:4px}
-.rule-subtitle{opacity:.8;font-size:.9rem}
-.rule-arabic{font-family:var(--font-ar);font-size:1rem;direction:rtl;margin-top:8px;opacity:.9}
+/* ── RULE HERO PREMIUM ── */
+.rule-hero{color:#fff;border-radius:22px;padding:26px 26px 22px;margin-bottom:22px;animation:fadeUp .4s var(--ease-out) both;position:relative;overflow:hidden;min-height:148px}
+.rule-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none}
+.rule-hero::after{content:'';position:absolute;bottom:-40px;right:20px;width:110px;height:110px;background:rgba(255,255,255,.06);border-radius:50%;pointer-events:none}
+.hero-deco{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:5.5rem;opacity:.1;pointer-events:none;line-height:1;user-select:none}
+.hero-stars{position:absolute;top:14px;right:22px;font-size:.55rem;letter-spacing:7px;opacity:.35;pointer-events:none}
+.rule-icon-wrap{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:rgba(255,255,255,.2);border-radius:50%;margin-bottom:14px;font-size:1.3rem;backdrop-filter:blur(4px)}
+.rule-title{font-family:var(--font-display);font-size:1.7rem;font-weight:700;line-height:1.1;margin-bottom:6px}
+.rule-underline{width:36px;height:2.5px;background:rgba(255,255,255,.45);border-radius:2px;margin:6px 0 8px}
+.rule-subtitle{opacity:.75;font-size:.88rem;margin-bottom:14px}
+.rule-arabic{display:inline-flex;align-items:center;padding:5px 14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);border-radius:9999px;font-family:'Amiri',serif;font-size:.95rem;direction:rtl;white-space:nowrap}
+/* Level gradients */
+.rule-hero.lv-A1{background:linear-gradient(145deg,#0d4225 0%,#1a7a40 55%,#14a055 100%)}
+.rule-hero.lv-A2{background:linear-gradient(145deg,#6a2008 0%,#b84820 55%,#d86825 100%)}
+.rule-hero.lv-B1{background:linear-gradient(145deg,#0f2870 0%,#2248c0 55%,#1870d0 100%)}
+.rule-hero.lv-B2{background:linear-gradient(145deg,#50082a 0%,#981845 55%,#b82860 100%)}
+.rule-hero.lv-C1{background:linear-gradient(145deg,#240855 0%,#4820a0 55%,#5828c8 100%)}
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;animation:fadeUp .4s var(--ease-out) both}
 .section-label{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px}
 .formula-box{background:var(--bg-2);border-radius:var(--r-md);padding:12px 16px;font-family:'Courier New',monospace;font-size:.88rem;color:var(--accent-deep);line-height:1.6}
@@ -150,6 +162,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .feedback-box.wrong{background:var(--error-tint);color:#8c2020;display:block}
 .ex-nav{display:flex;align-items:center;gap:10px;margin-top:20px;flex-wrap:wrap}
 .btn-prev:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.start-practice-wrap{display:flex;justify-content:center;padding:32px 20px 16px}
+.start-practice-btn{font-size:1rem;padding:14px 36px;border-radius:var(--r-full);box-shadow:var(--shadow-accent)}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border:none;border-radius:var(--r-full);font-family:var(--font-body);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(58,122,184,.3)}
 .btn-primary:hover{opacity:.88;transform:translateY(-1px)}
@@ -230,9 +244,11 @@ button,a,.rule-chip,.word-btn,.level-card,.quick-card{touch-action:manipulation;
   .btn-back{padding:8px 12px;font-size:.78rem;min-height:40px}
   .detail-nav-title{font-size:.82rem}
   .detail-body{padding:20px 14px 80px}
-  .rule-hero{padding:20px 20px 18px;border-radius:var(--r-lg)}
-  .rule-title{font-size:1.3rem}
-  .rule-subtitle{font-size:.85rem}
+  .rule-hero{padding:18px 18px 16px;border-radius:18px;min-height:130px}
+  .rule-title{font-size:1.35rem}
+  .rule-subtitle{font-size:.83rem}
+  .hero-deco{font-size:4rem}
+  .rule-icon-wrap{width:36px;height:36px;font-size:1.1rem}
 
   .mode-tabs{gap:6px}
   .mode-tab{padding:9px 6px;font-size:.76rem;min-height:40px}
@@ -272,7 +288,7 @@ button,a,.rule-chip,.word-btn,.level-card,.quick-card{touch-action:manipulation;
     <a class="btn-home" href="index.html">← الرئيسية</a>
     <div class="home-header-title">
       <div class="home-title">English Grammar</div>
-      <div class="home-subtitle">32 rules · 3 practice modes</div>
+      <div class="home-subtitle">32 rules · 2 practice modes</div>
     </div>
     <div class="home-progress-pill" id="stat-pct">0%</div>
   </div>
@@ -300,12 +316,7 @@ button,a,.rule-chip,.word-btn,.level-card,.quick-card{touch-action:manipulation;
     <span class="detail-nav-lvl" id="detail-nav-lvl"></span>
   </div>
   <div class="detail-body">
-    <div class="rule-hero" id="rule-hero">
-      <div class="rule-icon" id="r-icon"></div>
-      <div class="rule-title" id="r-title"></div>
-      <div class="rule-subtitle" id="r-subtitle"></div>
-      <div class="rule-arabic" id="r-arabic"></div>
-    </div>
+    <div class="rule-hero" id="rule-hero"></div>
     <div class="section-card" style="animation-delay:.06s">
       <div class="section-label">Formula</div>
       <div class="formula-box" id="r-formula"></div>
@@ -319,7 +330,6 @@ button,a,.rule-chip,.word-btn,.level-card,.quick-card{touch-action:manipulation;
       <div class="section-label">Practice</div>
       <div class="mode-tabs">
         <div class="mode-tab active" onclick="setMode('fill',this)">✏️ Fill Blank</div>
-        <div class="mode-tab" onclick="setMode('quick',this)">⚡ Quick Pick</div>
         <div class="mode-tab" onclick="setMode('trans',this)">🔤 Word Order</div>
       </div>
       <div class="ex-score" id="ex-score"></div>
@@ -6684,16 +6694,37 @@ function renderDetail(){
   document.getElementById('detail-nav-title').textContent = r.title;
   const lvlEl = document.getElementById('detail-nav-lvl');
   lvlEl.textContent = r.level; lvlEl.className = 'detail-nav-lvl lv-'+r.level;
-  document.getElementById('r-icon').textContent = r.icon;
-  document.getElementById('r-title').textContent = r.title;
-  document.getElementById('r-subtitle').textContent = r.subtitle;
-  document.getElementById('r-arabic').textContent = r.arabic;
+  // Build premium hero card
+  const deco = {'A1':'🌿','A2':'🔥','B1':'📘','B2':'🎯','C1':'💎'}[r.level] || '📖';
+  document.getElementById('rule-hero').innerHTML = `
+    <div class="hero-stars">✦ ✦ ✦</div>
+    <div class="hero-deco">${deco}</div>
+    <div class="rule-icon-wrap">${r.icon}</div>
+    <div class="rule-title">${r.title}</div>
+    <div class="rule-underline"></div>
+    <div class="rule-subtitle">${r.subtitle}</div>
+    <div class="rule-arabic">${r.arabic}</div>
+  `;
   document.getElementById('r-formula').textContent = r.formula;
   document.getElementById('r-explanation').innerHTML = renderExpl(r.explanation || '');
   document.getElementById('r-examples').innerHTML = r.examples.map(e=>`<li>${e}</li>`).join('');
   document.getElementById('rule-hero').className = 'rule-hero lv-'+r.level;
   // reset mode tabs
   document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  // Show start button instead of auto-rendering exercises
+  document.getElementById('ex-score').innerHTML = '';
+  document.getElementById('exercise-area').innerHTML = `
+    <div class="start-practice-wrap">
+      <button class="btn btn-primary start-practice-btn" onclick="startPractice()">
+        ✏️ ابدأ التدريب
+      </button>
+    </div>
+  `;
+}
+
+function startPractice(){
+  exIndex = 0;
+  window._scored = false;
   renderEx();
 }
 
@@ -6705,7 +6736,7 @@ function setMode(m, el){
   renderEx();
 }
 
-function getItems(){ return currentRule[currentMode === 'quick' ? 'error' : currentMode] || [] }
+function getItems(){ return currentRule[currentMode] || [] }
 
 function renderEx(){
   const items = getItems();
@@ -6719,9 +6750,6 @@ function renderEx(){
 
   if(currentMode === 'fill'){
     renderFill(item, area);
-  } else if(currentMode === 'quick'){
-    renderQuick(item, area);
-    return; // quick pick has its own nav/check logic
   } else {
     renderTrans(item, area);
   }
@@ -7137,7 +7165,7 @@ function saveQS(){
   const total = sessionScore.filter(v=>v!==undefined).length;
   const ok = sessionScore.filter(v=>v===true).length;
   if(total > 0){ rs[currentMode] = Math.round(ok/total*100); }
-  if((rs.fill||0)>=60 && (rs.quick||0)>=60 && (rs.trans||0)>=60) rs.done = true;
+  if((rs.fill||0)>=60 && (rs.trans||0)>=60) rs.done = true;
   save();
 }
 
@@ -7200,7 +7228,7 @@ function renderComplete(){
 
 function restartMode(){
   exIndex = 0; sessionScore = [...(ruleState(currentRule.id).qs?.[currentMode]||[]).slice()];
-  renderEx();
+  startPractice();
 }
 
 // ── SOUND ──
