@@ -912,6 +912,21 @@ body.practice-mode {
   transition: color 0.15s;
 }
 .notif-dismiss:hover { color: var(--text); }
+
+/* ── Topic card progress ── */
+.tc-progress{margin-top:8px}
+.tc-progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:3px}
+.tc-progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.tc-progress-row{display:flex;justify-content:space-between;align-items:center}
+.tc-pct{font-size:.65rem;font-weight:600;color:var(--accent)}
+.tc-words{font-size:.62rem;color:var(--text-3)}
+.topic-card-done .tc-pct{color:var(--success)}
+.resume-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border)}
+.resume-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;background:var(--accent);color:#fff;border-radius:var(--r-full);padding:5px 10px;font-size:.68rem;font-weight:600;text-decoration:none;white-space:nowrap;transition:opacity .15s}
+.resume-btn:hover{opacity:.85}
+.complete-btn{background:var(--success)}
+.restart-link{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--bg-2);border:1px solid var(--border);color:var(--text-3);font-size:.9rem;text-decoration:none;flex-shrink:0;transition:all .15s}
+.restart-link:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -1382,16 +1397,16 @@ function showTopicSelector() {
     const isComplete = tpPct >= 100;
     const accPct = tp.attempts > 0 ? Math.round(tp.correct / tp.attempts * 100) : null;
 
-    const progressHtml = tpDone > 0 ? `
-      <div style="margin-top:6px;">
-        <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;width:${tpPct}%;background:${isComplete ? 'var(--success)' : 'var(--accent)'};border-radius:2px;"></div>
+    const progressHtml = `
+      <div class="tc-progress">
+        <div class="tc-progress-bar">
+          <div class="tc-progress-fill" style="width:${tpPct}%;background:${isComplete ? 'var(--success)' : tpPct>0 ? 'var(--accent)' : 'var(--border-2)'};"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-3);margin-top:3px;">
-          <span>${tpPct}%${isComplete ? ' ✓' : ''}</span>
-          ${accPct !== null ? `<span>${accPct}% دقة</span>` : ''}
+        <div class="tc-progress-row">
+          <span class="tc-pct">${tpPct > 0 ? tpPct+'%'+( isComplete ? ' ✓' : '') : '0%'}</span>
+          <span class="tc-words">${tpDone}/${wds.length} كلمة</span>
         </div>
-      </div>` : '';
+      </div>`;
 
     // Resume button if there's a saved mid-batch or completed position
     const resumeFrom = getResumeFrom(level, topic);
@@ -1413,9 +1428,14 @@ function showTopicSelector() {
       ${hasResume ? `
         <div class="resume-row">
           <a class="resume-btn" href="${resumeHref}" onclick="event.stopPropagation()">
-            ▶ استأنف · كلمة ${resumeFrom + 1}
+            ▶ استأنف من كلمة ${resumeFrom + 1}
           </a>
-          <a class="restart-link" href="${href}" onclick="event.stopPropagation()">من البداية</a>
+          <a class="restart-link" href="${href}" onclick="event.stopPropagation()">↺</a>
+        </div>` : tpDone > 0 && isComplete ? `
+        <div class="resume-row">
+          <a class="resume-btn complete-btn" href="${href}" onclick="event.stopPropagation()">
+            ↺ أعد من البداية
+          </a>
         </div>` : ''}
     `;
     card.addEventListener('click', () => {
