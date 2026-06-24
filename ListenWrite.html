@@ -1156,7 +1156,7 @@ function getCachedUser() {
 // ══════════════════════════════════════
 //  LOAD LEVEL FROM URL
 // ══════════════════════════════════════
-const VALID_LEVELS = ['A1','A2','B1','B2','C1'];
+const VALID_LEVELS = ['A1','A2','B1','B2','C1','EAP'];
 const urlParams = new URLSearchParams(window.location.search);
 const urlLevel  = urlParams.get('level') || 'A1';
 const level     = VALID_LEVELS.includes(urlLevel) ? urlLevel : 'A1';
