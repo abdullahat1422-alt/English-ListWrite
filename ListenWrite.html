@@ -1005,6 +1005,8 @@ async function loadAllProgress() {
     if (!out[r.level]) out[r.level] = {};
     out[r.level][r.topic] = { done: r.done, correct: r.correct, attempts: r.attempts, lastFrom: r.last_from };
   });
+  // Cache to localStorage so first render (before Supabase loads) shows real progress
+  try { localStorage.setItem('lw_prog_cache', JSON.stringify(out)); } catch(_) {}
   return out;
 }
 
@@ -1495,6 +1497,10 @@ function playCompletionSound() {
     const audio = new Audio('applause.mp3');
     audio.volume = 0.75;
     audio.play().catch(() => {});
+    setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }, 3000);
   } catch (_) {}
 }
 
@@ -2075,6 +2081,11 @@ function appInit() {
     };
     currentProfile = { username: cached.name, avatar_url: cached.avatar, streak: 0 };
     _appStarted = true;
+    // Pre-load progress from local cache so first render shows real data
+    try {
+      const cachedProg = JSON.parse(localStorage.getItem('lw_prog_cache') || '{}');
+      if (Object.keys(cachedProg).length > 0) _progressCache = cachedProg;
+    } catch(_) {}
     document.getElementById('auth-overlay').style.display = 'none';
     appInit();
 
