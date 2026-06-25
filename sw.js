@@ -1,5 +1,5 @@
-// ListWrite Service Worker — v2
-const CACHE = 'listwrite-v2';
+// ListWrite Service Worker — v3
+const CACHE = 'listwrite-v3';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
