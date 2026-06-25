@@ -1,5 +1,5 @@
-// ListWrite Service Worker — v3
-const CACHE = 'listwrite-v3';
+// ListWrite Service Worker — v4
+const CACHE = 'listwrite-v4';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -18,6 +18,7 @@ const PRECACHE = [
 const RUNTIME_CACHE_PATTERNS = [
   /words_db\.js/,
   /words_extra\.js/,
+  /words_eap\.js/,
   /oxford_wordlist\.json/,
 ];
 
